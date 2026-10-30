@@ -1,0 +1,18 @@
+# BMad modelling artifacts: preserved on the append-only serexpai-bmad record branch
+# by the release-manager skill, kept off the code branch.
+_bmad-output/
+_bmad/
+.agents/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+id_rsa*
+
+# Benchmark corpora and generated outputs (commit manifests, not data)
+corpus/
+bench-data/
+bench-out/

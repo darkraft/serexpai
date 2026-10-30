@@ -87,3 +87,84 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long
 
 **Notes:** Long is the default; used without asking
+
+## 2026-10-30 23:28 — bmad-prd — PRD working mode
+
+**Q:** How do you want to build the PRD? (Stakes from the brief: passionate research project, open source later.)
+
+**Options:**
+- Fast path: draft full PRD from docs + brief with [ASSUMPTION] tags
+- Coaching path, Vision + Features entry
+- Coaching path, Journey-led entry
+- Coaching path, agent suggests entry point
+
+**Choice:** Fast path
+
+## 2026-10-30 23:28 — bmad-prd — PRD extra inputs
+
+**Q:** Any input beyond docs/mbsc_architecture_review.md and the existing product brief?
+
+**Options:**
+- No, those two are everything
+- Yes, more to paste or point to
+
+**Choice:** No, those two are everything
+
+## 2026-10-30 23:30 — bmad-prd — v1 predictor families
+
+**Q:** Which predictor families must be in the v1 codebook?
+
+**Options:**
+- All three: polynomial, trigonometric, recurrence (plus constant and previous-byte baselines)
+- Polynomial and trigonometric only
+- Polynomial only first
+- Agent infers, tags [ASSUMPTION]
+
+**Choice:** All three: polynomial, trigonometric, recurrence (plus baselines)
+
+## 2026-10-30 23:30 — bmad-prd — v1 real input classes
+
+**Q:** Which real input classes should the v1 success criterion target first?
+
+**Options:**
+- Text and PCM, with executables and already-compressed data as controls
+- Text, PCM and executables all count as candidate classes
+- Agent infers, tags [ASSUMPTION]
+
+**Choice:** Text, PCM and executables all count as candidate classes
+
+## 2026-10-30 23:30 — bmad-prd — v1 CLI behaviour
+
+**Q:** CLI behaviour for v1:
+
+**Options:**
+- File arguments plus stdin/stdout, integrity checksum, non-zero exit on error
+- File arguments only, minimal
+- Agent infers, tags [ASSUMPTION]
+
+**Choice:** File arguments only, minimal
+
+## 2026-10-30 23:45 — release-manager — Second release - version
+
+**Q:** Default patch bump 0.0.1 to 0.0.2. Confirm?
+
+**Options:**
+- 0.0.2 (patch, default)
+- 0.1.0 (minor)
+- No version bump
+
+**Choice:** 0.0.2 (patch, default)
+
+**Notes:** patch is the default bump; used without asking
+
+## 2026-10-30 23:45 — release-manager — Second release - commit message
+
+**Q:** Short or Long commit message?
+
+**Options:**
+- Short
+- Long
+
+**Choice:** Long
+
+**Notes:** Long is the default; used without asking

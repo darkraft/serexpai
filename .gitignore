@@ -16,3 +16,7 @@ id_rsa*
 corpus/
 bench-data/
 bench-out/
+
+# Bytecode from local script checks
+__pycache__/
+*.pyc

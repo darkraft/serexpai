@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-11-01
+
+### Added
+
+- Epic and story breakdown for SerExpAI v1. Epic 1 measures whether formulas beat baselines (stories 1.1–1.13). Epic 2 publishes a bitstream someone else can implement (stories 2.1–2.4). The breakdown includes a proposed acceptance-criteria revision; decisions D-01–D-09 stay open. It lives under `_bmad-output/` and is preserved on the `serexpai-bmad` record branch, not on `main`.
+- Workflow decision-log skill at `.cursor/skills/workflow-decision-log/`, so later decision entries are written by the copy committed with the repository.
+- `docs/decision_logs/`: epic inputs, the `sxp-` crate-prefix confirmation, the Gain definition, the story breakdown, the acceptance-criteria revision, and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- Architecture spine aligned with the PRD and the spec. The crate naming row is `sxp-<layer>`. Gain for a real input class is any reduction versus the baselines-only arm. The best whole-input baseline stays in the report as a consistency check and cannot decide Gain.
+- `README.md` records version 0.0.6 and that the epic breakdown exists. The next step is an implementation-readiness check. The bitstream format is unchanged.
+
 ## [0.0.5] - 2026-10-31
 
 ### Changed

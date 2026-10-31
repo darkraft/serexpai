@@ -677,3 +677,388 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long (default)
 
 **Notes:** docs: name the product SerExpAI and the crates sxp-* (v0.0.5)
+
+## 2026-10-31 23:25 — bmad-create-epics-and-stories — Step 1 — confirm input documents before requirements extraction
+
+**Q:** Are there other documents to include, or anything in the PRD and architecture spine pair to exclude?
+
+**Options:**
+- PRD prd.md and architecture spine only
+- Also SPEC.md
+- Also acceptance-criteria.md
+- Also corpora.md
+- Also glossary.md
+- Also bitstream-spec-seed.md
+- Also PRD addendum.md
+- Also product brief or research notes
+
+**Choice:** Include the PRD, the architecture spine, the spec (SPEC.md), corpora.md, and the bitstream spec (bitstream-spec-seed.md).
+
+## 2026-10-31 23:31 — bmad-create-epics-and-stories — Step 1 — requirements confirmation, crate prefix clash
+
+**Q:** The spine consistency table says crate names mbsc-<layer>, while the PRD, spec, crate table, and structural seed say sxp-. Which prefix should the inventory use?
+
+**Options:**
+- sxp-
+- mbsc-
+
+**Choice:** sxp-
+
+**Notes:** User: the crates prefix should be sxp. The spine consistency-table phrase mbsc-<layer> is overridden in epics.md and is not a crate name.
+
+## 2026-10-31 23:32 — bmad-create-epics-and-stories — Step 1 — requirements confirmation, Gain definition
+
+**Q:** The spine defines class Gain as smaller than both the baselines-only arm and the best whole-input baseline. The PRD and the spec treat the best-baseline figure as a consistency check that cannot decide Gain, with the two comparisons equivalent because the baselines-only arm is never larger. Which rule should the inventory and the spine use?
+
+**Options:**
+- PRD and spec: Gain versus the Baselines-only arm; best whole-input baseline is a consistency check; align the spine
+- Spine: Gain means smaller than both figures
+
+**Choice:** PRD and spec are correct; the spine should align to them.
+
+**Notes:** AD-14 now defines Gain as any reduction versus the Baselines-only arm. The best whole-input baseline stays in the report as a consistency check and cannot decide Gain. The spine naming row was also aligned from mbsc- to sxp-.
+
+## 2026-10-31 23:33 — bmad-create-epics-and-stories — Step 1 — confirm extracted requirements
+
+**Q:** Confirm the Requirements are complete and correct to [C] continue
+
+**Options:**
+- C — continue to epic design
+- Corrections or additions before continuing
+
+**Choice:** C
+
+## 2026-10-31 23:36 — bmad-create-epics-and-stories — Step 2 — epic structure menu
+
+**Q:** Select an Option: [A] Advanced Elicitation [P] Party Mode [C] Continue
+
+**Options:**
+- A — Advanced Elicitation
+- P — Party Mode
+- C — Continue
+
+**Choice:** A
+
+## 2026-10-31 23:38 — bmad-create-epics-and-stories — Advanced elicitation on the two-epic proposal
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Pre-mortem Analysis
+- 2. Critique and Refine
+- 3. User Persona Focus Group
+- 4. Assumption Audit
+- 5. Second-Order Thinking
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** 2 then 5
+
+## 2026-10-31 23:40 — bmad-create-epics-and-stories — Advanced elicitation — reshuffle after critique and second-order thinking
+
+**Q:** Apply the refined epic list to epics.md (y/n/other), or choose another elicitation action?
+
+**Options:**
+- y — apply the refined epic list
+- n — discard the refinement
+- 1. Pre-mortem Analysis
+- 2. Critique and Refine
+- 3. User Persona Focus Group
+- 4. Assumption Audit
+- 5. Second-Order Thinking
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** r — reshuffle
+
+**Notes:** Refined two-epic list is still unapplied. y/n remains open.
+
+## 2026-10-31 23:41 — bmad-create-epics-and-stories — Advanced elicitation — reshuffled methods on the refined epic list
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Inversion Analysis
+- 2. Problem Decomposition
+- 3. Stakeholder Round Table
+- 4. Red Team vs Blue Team
+- 5. Comparative Analysis Matrix
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** 2 then 5
+
+## 2026-10-31 23:44 — bmad-create-epics-and-stories — Advanced elicitation — apply refined epic list
+
+**Q:** Apply the enhanced two-epic list, coverage map, and in-epic sequences to epics.md? (y/n/other)
+
+**Options:**
+- y — apply
+- n — discard
+- other — follow the reply
+
+**Choice:** y
+
+**Notes:** Cumulative refinement from Critique and Refine, Second-Order Thinking, Problem Decomposition, and Comparative Analysis Matrix. Two epics kept. Epic 1 has a five-part story order. Epic 2 has a four-part completion.
+
+## 2026-10-31 23:46 — bmad-create-epics-and-stories — Advanced elicitation — reshuffle after the refined epic list was saved
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Inversion Analysis
+- 2. Problem Decomposition
+- 3. Stakeholder Round Table
+- 4. Red Team vs Blue Team
+- 5. Comparative Analysis Matrix
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** r — reshuffle
+
+## 2026-10-31 23:47 — bmad-create-epics-and-stories — Advanced elicitation — third reshuffle on the saved epic list
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Pre-mortem Analysis
+- 2. Assumption Audit
+- 3. User Persona Focus Group
+- 4. Steelmanning
+- 5. What If Scenarios
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** r — reshuffle
+
+## 2026-10-31 23:48 — bmad-create-epics-and-stories — Advanced elicitation — third method set on the saved epic list
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Failure Mode Analysis
+- 2. First Principles Analysis
+- 3. Stakeholder Lens Rotation
+- 4. Thesis Defense Simulation
+- 5. Subtraction
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** 2 then 4 then 5
+
+## 2026-10-31 23:48 — bmad-create-epics-and-stories — Advanced elicitation — apply subtracted epic list
+
+**Q:** Apply the shorter epic list (dependency rules replace the numbered story outlines) to epics.md? (y/n/other)
+
+**Options:**
+- y — apply
+- n — discard
+- other — follow the reply
+
+**Choice:** y
+
+**Notes:** From First Principles, Thesis Defense, and Subtraction. Two epics kept. Five-part and four-part outlines removed. Verdict waits on SM-1 thresholds. compress ships only when it matches the full-MBSC arm. Committing the spec is not a public release.
+
+## 2026-10-31 23:51 — bmad-create-epics-and-stories — Advanced elicitation — proceed back to epic design
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Failure Mode Analysis
+- 2. First Principles Analysis
+- 3. Stakeholder Lens Rotation
+- 4. Thesis Defense Simulation
+- 5. Subtraction
+- r. Reshuffle
+- a. List All
+- x. Proceed / No Further Actions
+
+**Choice:** x
+
+**Notes:** Saved epic list stands: Epic 1 measurement (FR-1–FR-10, FR-12–FR-15) and Epic 2 publication (FR-11). Numbered story outlines removed. Verdict waits on SM-1 thresholds. compress ships only when it matches the full-MBSC arm.
+
+## 2026-10-31 23:52 — bmad-create-epics-and-stories — Step 2 — approve epic structure
+
+**Q:** Do you approve this epic structure for proceeding to story creation? Select an Option: [A] Advanced Elicitation [P] Party Mode [C] Continue
+
+**Options:**
+- A — Advanced Elicitation
+- P — Party Mode
+- C — Continue
+
+**Choice:** C
+
+**Notes:** Approved Epic 1 (measure whether formulas beat baselines) and Epic 2 (publish a bitstream someone else can implement).
+
+## 2026-10-31 23:54 — bmad-create-epics-and-stories — Step 3 — Epic 1 story breakdown
+
+**Q:** Does this Epic 1 story breakdown match the epic? Story 1.3 (normative evaluator) can stay whole or split into one story per family.
+
+**Options:**
+- Keep 1.3 as one evaluator story
+- Split 1.3 into one story per family
+- Other merges or splits
+
+**Choice:** Split story 1.3
+
+**Notes:** Polynomial, trigonometric, and recurrence become separate stories. Later stories renumber.
+
+## 2026-10-31 23:56 — bmad-create-epics-and-stories — Step 3 — Story 1.1 review
+
+**Q:** Does story 1.1 capture the requirement? Is the scope right for a single implementation pass? Are the acceptance criteria complete and testable?
+
+**Options:**
+- yes
+- no — revise
+
+**Choice:** yes
+
+## 2026-10-31 23:57 — bmad-create-epics-and-stories — Step 3 — Story 1.2 review
+
+**Q:** Does story 1.2 capture the requirement? Is the scope right for a single implementation pass? Are the acceptance criteria complete and testable?
+
+**Options:**
+- yes
+- no — revise
+
+**Choice:** yes
+
+## 2026-11-01 00:03 — bmad-create-epics-and-stories — Step 3 — approve remaining story acceptance criteria
+
+**Q:** Does story 1.3 capture the requirement, and how should later story acceptance criteria be confirmed?
+
+**Options:**
+- y — approve story 1.3 only
+- y and yes for all subsequent acceptance criteria
+
+**Choice:** y and reply yes for all subsequent acceptance criteria
+
+**Notes:** Stories 1.3 through 1.13 and 2.1 through 2.4 written into epics.md without further per-story stops.
+
+## 2026-11-01 00:12 — bmad-create-epics-and-stories — Step 3 — final menu, document replacement
+
+**Q:** Select an Option: [A] Advanced Elicitation [P] Party Mode [C] Continue
+
+**Options:**
+- A — Advanced Elicitation
+- P — Party Mode
+- C — Continue
+- Replace epics.md with an attached file
+
+**Choice:** Replace epics.md with /home/darian/Downloads/epics_refx02.md
+
+**Notes:** The planning artifact was overwritten with the attached file. stepsCompleted remains step-01 and step-02. revisionStatus is acceptance-criteria-review-proposed.
+
+## 2026-11-01 00:15 — bmad-create-epics-and-stories — Step 3 — final menu after the acceptance-criteria revision was installed
+
+**Q:** Select an Option: [A] Advanced Elicitation [P] Party Mode [C] Continue
+
+**Options:**
+- A — Advanced Elicitation
+- P — Party Mode
+- C — Continue
+
+**Choice:** A
+
+**Notes:** Target is the installed epics.md revision (acceptance-criteria-review-proposed), not the previous story draft.
+
+## 2026-11-01 00:16 — bmad-create-epics-and-stories — Advanced elicitation on the installed acceptance-criteria revision
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Critique and Refine
+- 2. Assumption Audit
+- 3. Pre-mortem Analysis
+- 4. Map Is Not the Territory
+- 5. Challenge from Critical Perspective
+- r. Reshuffle
+- a. List All
+- x. Proceed
+
+**Choice:** 5, then 2, then 1, then 4
+
+## 2026-11-01 00:27 — bmad-create-epics-and-stories — Advanced elicitation — apply amendments to the acceptance-criteria revision
+
+**Q:** Apply the eight elicitation amendments to epics.md? (y/n/other)
+
+**Options:**
+- y — apply
+- n — discard
+- other — follow the reply
+
+**Choice:** Y
+
+**Notes:** Amendments from Challenge from Critical Perspective, Assumption Audit, Critique and Refine, and Map Is Not the Territory. They do not approve D-01 through D-08.
+
+## 2026-11-01 00:28 — bmad-create-epics-and-stories — Advanced elicitation — proceed back to the story-step menu
+
+**Q:** Choose a number (1-5), [r] to Reshuffle, [a] List All, or [x] to Proceed
+
+**Options:**
+- 1. Critique and Refine
+- 2. Assumption Audit
+- 3. Pre-mortem Analysis
+- 4. Map Is Not the Territory
+- 5. Challenge from Critical Perspective
+- r. Reshuffle
+- a. List All
+- x. Proceed / No Further Actions
+
+**Choice:** x
+
+**Notes:** The eight elicitation amendments stay in epics.md. D-01 through D-08 remain unapproved.
+
+## 2026-11-01 00:28 — bmad-create-epics-and-stories — Step 3 — continue to final validation
+
+**Q:** Select an Option: [A] Advanced Elicitation [P] Party Mode [C] Continue
+
+**Options:**
+- A — Advanced Elicitation
+- P — Party Mode
+- C — Continue
+
+**Choice:** C
+
+**Notes:** The amended acceptance-criteria revision in epics.md is the story document carried into final validation.
+
+## 2026-11-01 00:41 — bmad-create-epics-and-stories — Step 4 — complete the workflow
+
+**Q:** All validations complete! [C] Complete Workflow
+
+**Options:**
+- C — Complete Workflow
+
+**Choice:** C
+
+**Notes:** epics.md marked through step-04-final-validation. The amended acceptance-criteria revision is the development-ready breakdown.
+
+## 2026-11-01 00:43 — release-manager — Release cut from 0.0.5
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.5 to 0.0.6 (default)
+- Minor 0.1.0 (only if explicitly requested)
+
+**Choice:** Patch 0.0.6
+
+**Notes:** Default patch bump. Bitstream format is unchanged. Changelog is the version record; no language manifest exists.
+
+## 2026-11-01 00:43 — release-manager — Release commit message
+
+**Q:** Which commit message should the release use?
+
+**Options:**
+- Short: docs: add SerExpAI v1 epics and align Gain with the spec (v0.0.6)
+- Long: same subject plus body bullets (default)
+
+**Choice:** Long
+
+**Notes:** Default. User invoked release-manager and ordered a push.

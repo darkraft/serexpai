@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBSC v1 architecture walkthrough</title>
+<style>
+  :root { --bg:#0f1419; --panel:#171d25; --line:#2a3441; --text:#e6edf3; --muted:#8b98a8; --accent:#4cc2ff; --ok:#4cd98a; --bad:#ff6b6b; --warn:#ffc857; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, sans-serif; }
+  header { padding:18px 28px; border-bottom:1px solid var(--line); }
+  h1 { margin:0 0 4px; font-size:20px; }
+  header p { margin:0; color:var(--muted); }
+  nav { display:flex; gap:4px; padding:10px 28px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  nav button { background:transparent; color:var(--muted); border:1px solid transparent; padding:7px 14px; border-radius:6px; cursor:pointer; font:inherit; }
+  nav button.active { color:var(--text); background:var(--panel); border-color:var(--line); }
+  main { padding:24px 28px; max-width:1100px; }
+  section { display:none; }
+  section.active { display:block; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin:14px 0; }
+  .muted { color:var(--muted); }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:8px 0; }
+  select, input[type=range], input[type=number] { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; }
+  label { color:var(--muted); }
+  code { background:var(--bg); padding:1px 5px; border-radius:4px; font-size:13px; }
+  svg text { fill:var(--text); font:12px system-ui, sans-serif; }
+  .node rect { fill:var(--panel); stroke:var(--line); stroke-width:1.5; cursor:pointer; }
+  .node.kernel rect { stroke:var(--accent); }
+  .node:hover rect, .node.sel rect { stroke:var(--warn); }
+  .edge { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#arr); }
+  .edge.forbidden { stroke:var(--bad); stroke-dasharray:6 4; marker-end:url(#arrbad); }
+  .step { display:inline-block; margin:2px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; cursor:pointer; background:var(--bg); }
+  .step.active { border-color:var(--accent); background:#12303f; }
+  table { border-collapse:collapse; width:100%; }
+  td, th { text-align:left; padding:6px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  input[type=search] { width:100%; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:inherit; margin-bottom:10px; }
+  .tag { display:inline-block; font-size:12px; padding:1px 7px; border-radius:10px; border:1px solid var(--line); color:var(--muted); margin-right:4px; }
+  .legend span { margin-right:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MBSC v1: architecture walkthrough</h1>
+  <p>A guided tour of the spine. Normative Kernel + Encoder Shell. Source of truth: <code>ARCHITECTURE-SPINE.md</code> and <code>bitstream-spec-seed.md</code>.</p>
+</header>
+<nav id="tabs"></nav>
+<main>
+
+<section id="s-map" data-title="1. Shape">
+  <p>The decoder is a small normative kernel. Everything that searches, tunes or reports sits outside it and depends on it, never the reverse. Click a crate.</p>
+  <div class="panel">
+    <svg id="graph" viewBox="0 0 760 330" width="100%" role="img" aria-label="Crate dependency graph">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8b98a8"/></marker>
+        <marker id="arrbad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff6b6b"/></marker>
+      </defs>
+      <g id="edges"></g><g id="nodes"></g>
+    </svg>
+    <div class="row">
+      <label><input type="checkbox" id="showBad"> show forbidden edges (AD-1)</label>
+    </div>
+    <div id="nodeInfo" class="muted">Select a crate.</div>
+  </div>
+</section>
+
+<section id="s-flow" data-title="2. Compress / decompress">
+  <p>Every Candidate goes through one kernel <code>encode_block</code>, so a Baseline and a Formula differ only in the Predictor (AD-2). Click a step.</p>
+  <div class="panel">
+    <div id="steps"></div>
+    <div id="stepInfo" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section id="s-block" data-title="3. Block anatomy">
+  <p>A Block is a header, parameters and its own rANS stream (AD-8). Pick a kind to see the layout and its fixed cost.</p>
+  <div class="panel">
+    <div class="row">
+      <label>Kind <select id="kind"></select></label>
+      <label>Coefficient width <input type="number" id="cw" min="1" max="32" value="16" style="width:70px"></label>
+      <label>Degree / order <input type="number" id="deg" min="1" max="15" value="3" style="width:70px"></label>
+      <label>Payload estimate (bytes) <input type="number" id="payload" min="0" max="3000" value="120" style="width:90px"></label>
+    </div>
+    <svg id="blockSvg" viewBox="0 0 900 110" width="100%"></svg>
+    <div id="blockInfo"></div>
+  </div>
+</section>
+
+<section id="s-dp" data-title="4. Partition DP">
+  <p>Block cost is exact and additive (AD-8), so a dynamic program over the 256-byte grid gives the optimal partition (AD-9). This toy uses a made-up compressibility profile. Change the per-Block overhead and watch the partition move.</p>
+  <div class="panel">
+    <div class="row">
+      <label>Input length N <input type="number" id="dpN" min="256" max="8192" step="1" value="5000" style="width:90px"></label>
+      <label>Per-Block overhead (bytes) <input type="range" id="dpOv" min="2" max="60" value="12"> <span id="dpOvV">12</span></label>
+      <label>Profile seed <input type="number" id="dpSeed" min="1" max="999" value="7" style="width:70px"></label>
+    </div>
+    <svg id="dpSvg" viewBox="0 0 900 190" width="100%"></svg>
+    <div id="dpInfo" class="muted"></div>
+  </div>
+</section>
+
+<section id="s-ad" data-title="5. Rules (AD index)">
+  <input type="search" id="adq" placeholder="Filter rules by id, title or text...">
+  <div class="panel"><table><thead><tr><th>AD</th><th>Decision</th><th>Binds</th><th>Prevents</th></tr></thead><tbody id="adbody"></tbody></table></div>
+</section>
+
+</main>
+<script>
+const tabs = [...document.querySelectorAll('section')];
+const nav = document.getElementById('tabs');
+tabs.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.textContent = s.dataset.title;
+  b.onclick = () => show(i);
+  nav.appendChild(b);
+});
+function show(i) {
+  tabs.forEach((s, j) => s.classList.toggle('active', i === j));
+  [...nav.children].forEach((b, j) => b.classList.toggle('active', i === j));
+}
+show(0);
+
+/* ---------- 1. crate graph ---------- */
+const crates = {
+  cli:     { x:300, y:20,  w:160, h:48, label:'mbsc-cli',     info:'Shell. compress, decompress, benchmark subcommands. Exit 0 or 1; temp file + rename; no config files, no logging framework.' },
+  bench:   { x:60,  y:130, w:170, h:48, label:'mbsc-bench',   info:'Shell. Corpus manifest (TOML), synthetic signals, benchmark arms, report (JSON). Verdict reads evaluation inputs only (AD-14).' },
+  encoder: { x:530, y:130, w:170, h:48, label:'mbsc-encoder', info:'Encoder side. Codebook (<= 4096 Formulas), Baselines, Candidate enumeration, partition DP, Rate selector. Deterministic under rayon (AD-13).' },
+  kernel:  { x:280, y:250, w:200, h:56, label:'mbsc-kernel',  info:'Normative kernel. Evaluator, sine LUT, residual math, bit-tree model, rANS, Block encode/decode, all Bitstream read/write. Zero third-party runtime deps, forbid(unsafe_code) (AD-1).', kernel:true },
+};
+const edges = [['cli','bench'],['cli','encoder'],['bench','encoder'],['bench','kernel'],['encoder','kernel'],['cli','kernel']];
+const bad = [['kernel','encoder'],['kernel','bench']];
+const ns = 'http://www.w3.org/2000/svg';
+function anchor(k, to) {
+  const a = crates[k], b = crates[to];
+  const ax = a.x + a.w/2, ay = a.y + a.h/2, bx = b.x + b.w/2, by = b.y + b.h/2;
+  const dx = bx-ax, dy = by-ay;
+  const t = Math.min(Math.abs((a.w/2)/(dx||1e-9)), Math.abs((a.h/2)/(dy||1e-9)));
+  return [ax + dx*t, ay + dy*t];
+}
+function drawEdges() {
+  const g = document.getElementById('edges'); g.innerHTML = '';
+  const list = edges.map(e => [...e, false]);
+  if (document.getElementById('showBad').checked) bad.forEach(e => list.push([...e, true]));
+  list.forEach(([f, t, forb]) => {
+    const [x1, y1] = anchor(f, t), [x2, y2] = anchor(t, f);
+    const p = document.createElementNS(ns, 'path');
+    const off = forb ? 14 : 0;
+    p.setAttribute('d', `M${x1+off} ${y1} L${x2+off} ${y2}`);
+    p.setAttribute('class', 'edge' + (forb ? ' forbidden' : ''));
+    g.appendChild(p);
+  });
+}
+function drawNodes() {
+  const g = document.getElementById('nodes'); g.innerHTML = '';
+  Object.entries(crates).forEach(([k, c]) => {
+    const n = document.createElementNS(ns, 'g');
+    n.setAttribute('class', 'node' + (c.kernel ? ' kernel' : ''));
+    n.innerHTML = `<rect x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="8"/><text x="${c.x + c.w/2}" y="${c.y + c.h/2 + 4}" text-anchor="middle">${c.label}</text>`;
+    n.onclick = () => {
+      document.querySelectorAll('.node').forEach(x => x.classList.remove('sel'));
+      n.classList.add('sel');
+      const deps = edges.filter(e => e[0] === k).map(e => crates[e[1]].label).join(', ') || 'none';
+      document.getElementById('nodeInfo').innerHTML = `<b>${c.label}</b>: ${c.info}<br><span class="muted">Depends on: ${deps}</span>`;
+    };
+    g.appendChild(n);
+  });
+}
+document.getElementById('showBad').onchange = drawEdges;
+drawEdges(); drawNodes();
+
+/* ---------- 2. flow ---------- */
+const steps = [
+  ['Partition DP', 'encoder', 'One-dimensional DP over every 256-aligned offset. At offset o with r bytes left, allowed nominal lengths are every L <= r, plus (when r <= 2048) the smallest length >= r as a final Block. Optimal because costs are additive (AD-9).'],
+  ['Enumerate Candidates', 'encoder', 'For each (offset, length): Raw, Direct, Previous-byte, Constant, and every Codebook Formula (<= 4096, regenerated from an integer-only recipe). Parallel via rayon, deterministic (AD-13).'],
+  ['kernel encode_block', 'kernel', 'The same function for every Candidate. Produces the predicted stream (Evaluator or Baseline), residual symbols, bit-tree decisions, then rANS in reverse. Returns the exact Block bytes and size (AD-2, AD-7).'],
+  ['Rate selector', 'encoder', 'Minimises (total size, Block count, lexicographic (length code, Candidate id)). Raw wins ties; Baselines beat Formulas on ties; no entropy screen in v1 (AD-10).'],
+  ['Write + raw check', 'kernel', 'The kernel writer serialises header and Blocks. The encoder compares with Whole-file raw and keeps the smaller; output is at most N + 7 bytes (AD-8, AD-10, AD-11).'],
+  ['Decode', 'kernel', 'Parse header, then Block by Block: read header, parameters, rANS stream; evaluate predictor, add residual mod 256. Rejects non-canonical lengths, trailing bytes, bad rANS end state. 64 KiB heap max (AD-11, AD-12).'],
+  ['Atomic output', 'cli', 'Write to a temp file in the target directory and rename on success. A failure leaves no output file (AD-12).'],
+];
+const stepsEl = document.getElementById('steps');
+steps.forEach((s, i) => {
+  const d = document.createElement('span');
+  d.className = 'step'; d.textContent = `${i+1}. ${s[0]}`;
+  d.onclick = () => {
+    [...stepsEl.children].forEach(x => x.classList.remove('active'));
+    d.classList.add('active');
+    document.getElementById('stepInfo').innerHTML = `<span class="tag">${s[1]}</span> ${s[2]}`;
+  };
+  stepsEl.appendChild(d);
+});
+stepsEl.firstChild.click();
+
+/* ---------- 3. block anatomy ---------- */
+const kinds = [
+  ['Raw', 0], ['Direct', 1], ['Previous-byte', 2], ['Constant', 3], ['Polynomial', 4], ['Trigonometric', 5], ['Recurrence', 6],
+];
+const kindSel = document.getElementById('kind');
+kinds.forEach(([n, c]) => { const o = document.createElement('option'); o.value = c; o.textContent = `${c} ${n}`; kindSel.appendChild(o); });
+kindSel.value = 4;
+function fieldsFor(kind, cw, deg) {
+  const f = [['length', 2], ['kind', 3]];
+  if (kind === 3) f.push(['c', 8]);
+  if (kind === 4) { f.push(['degree', 4], ['q-8', 5], ['cw-1', 5]); for (let i = 0; i <= deg; i++) f.push([`c${i}`, cw]); }
+  if (kind === 5) { f.push(['order-1', 4], ['q-8', 5], ['cw-1', 5], ['omega', 32], ['c0', cw]); for (let i = 1; i <= deg; i++) f.push([`a${i}`, cw], [`b${i}`, cw]); }
+  if (kind === 6) { f.push(['order-1', 1], ['m_mod-2', 24], ['cw-1', 5], ['a', cw], ['b', cw]); if (deg >= 2) f.push(['c', cw]); f.push(['s0', 24]); if (deg >= 2) f.push(['s1', 24]); }
+  return f;
+}
+function drawBlock() {
+  const kind = +kindSel.value, cw = +document.getElementById('cw').value;
+  let deg = +document.getElementById('deg').value;
+  if (kind === 5) deg = Math.min(deg, 16);
+  if (kind === 6) deg = deg >= 2 ? 2 : 1;
+  const payload = +document.getElementById('payload').value;
+  const f = fieldsFor(kind, cw, deg);
+  const bits = f.reduce((s, x) => s + x[1], 0);
+  const hdrBytes = Math.ceil(bits / 8);
+  const svg = document.getElementById('blockSvg'); svg.innerHTML = '';
+  const total = hdrBytes * 8 + (kind === 0 ? 0 : 0);
+  const scale = Math.min(860 / Math.max(total, 1), 24);
+  let x = 20;
+  const colors = ['#4cc2ff', '#ffc857', '#4cd98a', '#c792ea', '#ff9e64'];
+  f.forEach((fl, i) => {
+    const w = fl[1] * scale;
+    const r = document.createElementNS(ns, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', 20); r.setAttribute('width', Math.max(w - 1, 1)); r.setAttribute('height', 40);
+    r.setAttribute('fill', colors[i % colors.length]); r.setAttribute('opacity', '.8');
+    svg.appendChild(r);
+    if (w > 28) { const t = document.createElementNS(ns, 'text'); t.setAttribute('x', x + w/2); t.setAttribute('y', 44); t.setAttribute('text-anchor', 'middle'); t.setAttribute('fill', '#0f1419'); t.style.fill = '#0f1419'; t.textContent = fl[0]; svg.appendChild(t); }
+    x += w;
+  });
+  const pad = hdrBytes * 8 - bits;
+  if (pad > 0) { const r = document.createElementNS(ns, 'rect'); r.setAttribute('x', x); r.setAttribute('y', 20); r.setAttribute('width', pad * scale - 1); r.setAttribute('height', 40); r.setAttribute('fill', '#2a3441'); svg.appendChild(r); }
+  const lab = document.createElementNS(ns, 'text'); lab.setAttribute('x', 20); lab.setAttribute('y', 85);
+  lab.textContent = `header + parameters: ${bits} bits, padded to ${hdrBytes} byte(s)`; svg.appendChild(lab);
+  let tail, size;
+  if (kind === 0) { tail = `Raw: the Block's bytes follow verbatim (no rANS stream).`; size = hdrBytes + payload; }
+  else { tail = `rANS stream: payload ~${payload} B + 4 B flush (exact, AD-8).`; size = hdrBytes + payload + 4; }
+  document.getElementById('blockInfo').innerHTML = `<p>${tail}</p><p><b>Estimated Block size: ${size} bytes</b>. The selector uses the kernel's exact size, never this estimate. At 256 bytes the fixed cost is <b>${(((hdrBytes + (kind === 0 ? 0 : 4)) / 256) * 100).toFixed(1)}%</b> of the input span.</p>`;
+}
+['kind', 'cw', 'deg', 'payload'].forEach(id => document.getElementById(id).oninput = drawBlock);
+drawBlock();
+
+/* ---------- 4. DP ---------- */
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function drawDP() {
+  const N = Math.max(256, +document.getElementById('dpN').value | 0);
+  const ov = +document.getElementById('dpOv').value;
+  document.getElementById('dpOvV').textContent = ov;
+  const r = rng(+document.getElementById('dpSeed').value);
+  const grid = 256, K = Math.ceil(N / grid);
+  const prof = []; let cur = 2 + r() * 6;
+  for (let i = 0; i < K; i++) { if (r() < 0.25) cur = 1.5 + r() * 6.5; prof.push(cur); }   // bits per byte per chunk
+  const lens = [256, 1024, 2048];
+  const chunkBytes = i => Math.min(grid, N - i * grid);
+  function cost(i, L) {
+    const nChunks = L / grid; let bytes = 0, bits = 0;
+    for (let j = i; j < Math.min(K, i + nChunks); j++) { const b = chunkBytes(j); bytes += b; bits += prof[j] * b; }
+    return Math.min(Math.ceil(bits / 8) + ov, bytes + 1);   // never worse than Raw (header 1 byte + bytes)
+  }
+  function canon(i, L) { const rem = N - i * grid; if (L <= rem) return true; const sm = lens.find(x => x >= rem); return rem <= 2048 && L === sm; }
+  const best = Array(K + 1).fill(Infinity), nxt = Array(K + 1).fill(-1), choice = Array(K + 1).fill(0);
+  best[K] = 0;
+  for (let i = K - 1; i >= 0; i--) {
+    for (const L of lens) {
+      if (!canon(i, L)) continue;
+      const adv = Math.min(K, i + L / grid);
+      const c = cost(i, L) + best[adv];
+      if (c < best[i] || (c === best[i] && L > choice[i] && false)) { best[i] = c; nxt[i] = adv; choice[i] = L; }
+    }
+  }
+  const svg = document.getElementById('dpSvg'); svg.innerHTML = '';
+  const W = 860, cw = W / K;
+  for (let i = 0; i < K; i++) {
+    const v = (prof[i] - 1.5) / 6.5, h = 10 + v * 60;
+    const rr = document.createElementNS(ns, 'rect');
+    rr.setAttribute('x', 20 + i * cw); rr.setAttribute('y', 80 - h); rr.setAttribute('width', Math.max(cw - 1, 1)); rr.setAttribute('height', h);
+    rr.setAttribute('fill', `hsl(${200 - v * 150},60%,50%)`); rr.setAttribute('opacity', '.8'); svg.appendChild(rr);
+  }
+  const t0 = document.createElementNS(ns, 'text'); t0.setAttribute('x', 20); t0.setAttribute('y', 98); t0.textContent = 'per-256-byte chunk: bits per byte (taller = harder to compress)'; svg.appendChild(t0);
+  let i = 0, nb = 0; const cols = { 256: '#4cd98a', 1024: '#4cc2ff', 2048: '#ffc857' };
+  const counts = { 256: 0, 1024: 0, 2048: 0 };
+  while (i < K) {
+    const L = choice[i], adv = nxt[i];
+    const rr = document.createElementNS(ns, 'rect');
+    rr.setAttribute('x', 20 + i * cw + 1); rr.setAttribute('y', 110); rr.setAttribute('width', Math.max((adv - i) * cw - 3, 1)); rr.setAttribute('height', 34);
+    rr.setAttribute('fill', cols[L]); rr.setAttribute('rx', 4); rr.setAttribute('opacity', '.9'); svg.appendChild(rr);
+    const tt = document.createElementNS(ns, 'text'); tt.setAttribute('x', 20 + i * cw + (adv - i) * cw / 2); tt.setAttribute('y', 131); tt.setAttribute('text-anchor', 'middle'); tt.style.fill = '#0f1419'; tt.textContent = L; svg.appendChild(tt);
+    counts[L]++; nb++; i = adv;
+  }
+  const lg = document.createElementNS(ns, 'text'); lg.setAttribute('x', 20); lg.setAttribute('y', 170); lg.textContent = 'chosen Blocks (nominal length); the last Block may be partial'; svg.appendChild(lg);
+  document.getElementById('dpInfo').innerHTML = `Total ${best[0]} bytes for N = ${N} (raw would be ${N + 7}). ${nb} Blocks: ${counts[256]} x 256, ${counts[1024]} x 1024, ${counts[2048]} x 2048.`;
+}
+['dpN', 'dpOv', 'dpSeed'].forEach(id => document.getElementById(id).oninput = drawDP);
+drawDP();
+
+/* ---------- 5. AD index ---------- */
+const ads = [
+  ['AD-1','Kernel isolation','all','Decoder reaching the Codebook or a third-party coder; dependency drift'],
+  ['AD-2','One coding path for every Candidate','FR-5..7, FR-14, SM-1','Baselines and Formulas measured through different paths'],
+  ['AD-3','Modular residual reconstruction','FR-1, SM-2','Two residual code paths'],
+  ['AD-4','Formulas are positionwise','FR-3..5, FR-7','History-dependent predictors; cross-Block state'],
+  ['AD-5','Single Evaluator, overflow impossible by construction','FR-2, FR-3, SM-2, SM-5','Different ŷ, platform-dependent arithmetic, two readings of position'],
+  ['AD-6','Family-specific parameter layouts','FR-3, FR-9','Overloaded M; too-narrow fields'],
+  ['AD-7','One causal model, hand-written rANS','FR-6..8','Non-causal or per-Candidate models; non-invertible rANS totals'],
+  ['AD-8','Blocks are self-contained and additive','FR-5, FR-6, FR-9, FR-14','Cross-Block cost coupling; split serialisation ownership'],
+  ['AD-9','Partition by free DP on a 256-byte grid','FR-5, FR-6, FR-14','Greedy partitioning; unsignalled partial Blocks'],
+  ['AD-10','Rate selector on exact size, bounded raw fallback','FR-6, FR-10, SM-3','Estimate-based choice; nondeterministic ties; expansion'],
+  ['AD-11','Container framing and spec obligations','FR-9..11','Ambiguous framing; disagreement on rejection'],
+  ['AD-12','Decoder and encoder safety, bounded memory','FR-12, FR-13, SM-2','OOB reads, untrusted allocations, partial output'],
+  ['AD-13','Deterministic encoder, reproducible Codebook','FR-4, FR-12, SM-4, SM-C2','Thread-dependent output; tuning leakage'],
+  ['AD-14','Benchmark integrity','FR-14, FR-15, SM-1, SM-4','Inflated verdicts; arms differing in more than the Predictor'],
+  ['AD-15','Normative change forces a version bump','FR-2, FR-9, FR-11, SM-5','Spec, kernel, vectors and reference decoder diverging'],
+];
+const body = document.getElementById('adbody');
+function renderAds(q) {
+  body.innerHTML = '';
+  ads.filter(a => a.join(' ').toLowerCase().includes(q.toLowerCase())).forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><span class="tag">${a[0]}</span></td><td>${a[1]}</td><td class="muted">${a[2]}</td><td class="muted">${a[3]}</td>`;
+    body.appendChild(tr);
+  });
+}
+document.getElementById('adq').oninput = e => renderAds(e.target.value);
+renderAds('');
+</script>
+</body>
+</html>

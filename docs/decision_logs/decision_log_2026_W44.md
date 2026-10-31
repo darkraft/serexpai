@@ -363,3 +363,293 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long
 
 **Notes:** Long is the default; used without asking
+
+## 2026-10-31 09:36 — bmad-spec — Activation — choose source
+
+**Q:** Which source should I distill into a SPEC kernel?
+
+**Options:**
+- PRD (prd.md + addendum.md)
+- Architecture spine (ARCHITECTURE-SPINE.md + bitstream-spec-seed.md)
+- Product brief (brief.md + addendum.md)
+- Something else
+
+**Choice:** PRD (prd.md + addendum.md), Architecture spine (ARCHITECTURE-SPINE.md + bitstream-spec-seed.md), Product brief (brief.md + addendum.md)
+
+## 2026-10-31 09:36 — bmad-spec — Activation — gap handling
+
+**Q:** If any source is sparse, how should I handle gaps?
+
+**Options:**
+- Express
+- Guided
+
+**Choice:** Express
+
+## 2026-10-31 18:15 — bmad-spec — Post-research — apply open-question findings
+
+**Q:** How should I use these recommendations?
+
+**Options:**
+- Fold into spec + update architecture spine and spec seed
+- Fold into spec only
+- Walk through each question one at a time
+- Leave as research
+
+**Choice:** Fold into spec + update architecture spine and spec seed
+
+**Notes:** research: _bmad-output/planning-artifacts/research/open-questions-research-2026-10-31.md
+
+## 2026-10-31 18:19 — bmad-spec — Folding research — checksum design
+
+**Q:** Optional or mandatory integrity checksum?
+
+**Options:**
+- Mandatory CRC-32 in every file; bound N+11
+- Optional CRC-32 via header bit 6, default on
+- No checksum in v1
+
+**Choice:** Mandatory CRC-32 in every file; bound N+11
+
+**Notes:** advisor: canonical single layout since format not frozen; deviates from research rank-1 (optional)
+
+## 2026-10-31 18:40 — bmad-spec — Open-question walkthrough Q1 — MEASURE procedure
+
+**Q:** Which rule picks the measured constants (tuning inputs only)?
+
+**Options:**
+- Model constants on Baselines-only arm, widths on full MBSC, ties to simpler
+- Everything on full MBSC
+- As first but class-weighted
+- No tuning: freeze defaults
+
+**Choice:** Model constants on Baselines-only arm, widths on full MBSC, ties to simpler
+
+## 2026-10-31 18:40 — bmad-spec — Open-question walkthrough Q1 — initial probability shape
+
+**Q:** Initial probability: per-depth table or one value?
+
+**Options:**
+- Per-depth (8 values), adopted only if it beats scalar
+- Single value only
+- Full per-node table (255)
+
+**Choice:** Per-depth (8 values), adopted only if it beats scalar
+
+## 2026-10-31 18:42 — bmad-spec — Open-question walkthrough Q2 — PCM input grouping
+
+**Q:** How should LJ Speech clips become benchmark inputs?
+
+**Options:**
+- Each clip one input (~60 eval, ~30 tuning)
+- Concatenate into 3 eval + 2 tuning inputs
+- Per-clip for verdict plus concatenated non-counted rows
+
+**Choice:** Each clip one input (~60 eval, ~30 tuning)
+
+## 2026-10-31 18:42 — bmad-spec — Open-question walkthrough Q2 — PCM clip selection
+
+**Q:** How are clips chosen?
+
+**Options:**
+- Seeded documented sample; tuning LJ001-LJ025, eval LJ026-LJ050
+- First N clips in ID order
+- Split by source book
+
+**Choice:** Seeded documented sample; tuning LJ001-LJ025, eval LJ026-LJ050
+
+## 2026-10-31 18:43 — bmad-spec — Open-question walkthrough Q3 — text evaluation inputs
+
+**Q:** Which inputs evaluate the text class?
+
+**Options:**
+- Three equal 4 MiB slices: dickens, webster, xml
+- Four equal 3 MiB slices including reymont
+- Current: dickens whole + two webster slices
+- Prose only: three dickens slices
+
+**Choice:** A and B
+
+**Notes:** interpreted as four equal 3 MiB middle slices of dickens, webster, xml, reymont
+
+## 2026-10-31 18:45 — bmad-spec — Open-question walkthrough Q4 — modern executable package
+
+**Q:** Which Debian 13 package supplies amd64 and arm64 binaries?
+
+**Options:**
+- busybox-static
+- ripgrep
+- Both (5 exec eval inputs)
+- libpython3
+
+**Choice:** Both (5 exec eval inputs)
+
+## 2026-10-31 18:45 — bmad-spec — Open-question walkthrough Q4 — executable input sizing
+
+**Q:** Equal-size middle slices for executables?
+
+**Options:**
+- Yes, sized to smallest
+- No, whole files
+
+**Choice:** Yes, sized to smallest
+
+## 2026-10-31 18:45 — bmad-spec — Open-question walkthrough Q5 — overlap checker policy
+
+**Q:** When a tuning and evaluation input share a run >= 1 KiB, what happens?
+
+**Options:**
+- Keep evaluation fixed, drop and replace the tuning input
+- Strip Gutenberg boilerplate via transform
+- Shift evaluation slice offset
+- Allowlist boilerplate runs
+
+**Choice:** Keep evaluation fixed, drop and replace the tuning input
+
+## 2026-10-31 18:48 — bmad-spec — Open-question walkthrough Q6 — rANS patent exposure
+
+**Q:** How should the project handle Microsoft's rANS patent?
+
+**Options:**
+- Open-source research release with design safeguards; legal review before commercial use
+- Attorney review before first public release
+- Commercial use planned: FTO review now, before implementation
+- Avoid rANS: switch to range/arithmetic coder
+
+**Choice:** C and optionally D, after reviewing US Patent US11,234,023 B2
+
+**Notes:** FTO review now gates kernel rANS; range-coder fallback decided after review
+
+## 2026-10-31 18:48 — bmad-spec — Open-question walkthrough Q6 — spec licence
+
+**Q:** Should the spec document carry your own patent promise as well?
+
+**Options:**
+- Keep CC BY 4.0
+- OWFa 1.0
+
+**Choice:** Keep CC BY 4.0
+
+## 2026-10-31 18:52 — bmad-spec — Open-question walkthrough — confirm text set
+
+**Q:** Is this the text set you meant (four 3 MiB slices)?
+
+**Options:**
+- Yes, plus cp.html and xargs.1 in tuning
+- Yes, tuning unchanged
+- Four slices at 4 MiB
+- No, something else
+
+**Choice:** Yes, plus cp.html and xargs.1 in tuning
+
+## 2026-10-31 21:01 — bmad-spec — Patent claim chart — next step
+
+**Q:** Write the recommended safeguards into spec, spine and seed now?
+
+**Options:**
+- Yes: normative decode-step shape, no-flush-field rule, patent-review trigger
+- No: wait for counsel
+- Yes, and update PRD
+
+**Choice:** Use A and also implement the "Fallback" as an alternative.
+
+## 2026-10-31 21:12 — bmad-spec — Coder choice for format v1
+
+**Q:** Which coder does format v1 freeze?
+
+**Options:**
+- rANS (seed 6A)
+- LZMA-style binary range coder (seed 6B)
+
+**Choice:** LZMA-style binary range coder (seed 6B)
+
+**Notes:** user: 'use the range coder format for v1'
+
+## 2026-10-31 21:18 — bmad-prd — PRD update — overrides
+
+**Q:** Apply all six spec overrides to the PRD?
+
+**Options:**
+- Yes, all six
+- No, exclude or discuss some
+
+**Choice:** Yes, all six
+
+## 2026-10-31 21:18 — bmad-prd — PRD update — Finalize depth
+
+**Q:** How much of Finalize should run?
+
+**Options:**
+- Light: reconcile + rubric review + polish changed sections
+- Full
+- Minimal
+
+**Choice:** Light: reconcile + rubric review + polish changed sections
+
+## 2026-10-31 21:29 — bmad-prd — PRD rubric triage — one-class win
+
+**Q:** What should a win on exactly one Real class mean?
+
+**Options:**
+- Partial result opening only that class's deferred experiments
+- Plain negative
+- One class is enough
+- Defer to open question
+
+**Choice:** Defer to open question
+
+## 2026-10-31 21:29 — bmad-prd — PRD rubric triage — marginal Gain
+
+**Q:** Should a marginal Gain count toward the go decision?
+
+**Options:**
+- Any reduction for research answer; go needs threshold share + majority of inputs, numbers set before first evaluation run
+- No threshold
+- Threshold now: 1% and majority
+- Defer
+
+**Choice:** Any reduction for research answer; go needs threshold share + majority of inputs, numbers set before first evaluation run
+
+## 2026-10-31 21:29 — bmad-prd — PRD rubric triage — legal review timing
+
+**Q:** When does counsel's patent review happen?
+
+**Options:**
+- Before first public release
+- Before commercial release, accepted risk
+- Now
+
+**Choice:** Before first public release
+
+## 2026-10-31 21:29 — bmad-prd — PRD rubric triage — executable tuning
+
+**Q:** How to handle the executable tuning mismatch?
+
+**Options:**
+- Add a modern tuning executable
+- Note the bias
+- Both
+
+**Choice:** Add a modern tuning executable
+
+## 2026-10-31 23:01 — release-manager — v0.0.4 — version bump
+
+**Q:** Which version bump?
+
+**Options:**
+- Patch 0.0.3 → 0.0.4 (default)
+- Minor 0.1.0
+
+**Choice:** Patch 0.0.3 → 0.0.4 (default)
+
+**Notes:** default patch; bitstream design change still patch unless a minor is requested
+
+## 2026-10-31 23:01 — release-manager — v0.0.4 — commit message
+
+**Q:** Short or Long commit message?
+
+**Options:**
+- Short
+- Long (default)
+
+**Choice:** Long (default)

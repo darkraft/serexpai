@@ -7,7 +7,7 @@ updated: 2026-10-30
 
 # Product Brief: MBSC
 
-Source of truth: `docs/mbsc_architecture_review.md`. Technical detail from it is preserved in `addendum.md`.
+The product name is SerExpAI. MBSC in this brief names the idea that product represents. Source of truth: `docs/mbsc_architecture_review.md`. Technical detail from it is preserved in `addendum.md`.
 
 ## Executive Summary
 

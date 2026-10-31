@@ -1,10 +1,10 @@
 ---
-name: 'MBSC v1'
+name: 'SerExpAI v1'
 type: architecture-spine
 purpose: build-substrate
 altitude: initiative
 paradigm: 'Normative Kernel + Encoder Shell (functional core, imperative shell) over a compile-enforced crate graph'
-scope: 'MBSC v1 whole system: CLI lossless compressor (compress, decompress, benchmark), Normative Evaluator, Codebook search, binary range coding, Bitstream'
+scope: 'SerExpAI v1, the product that represents MBSC (Multi-Basis Series Compression System): CLI lossless compressor (compress, decompress, benchmark), Normative Evaluator, Codebook search, binary range coding, Bitstream'
 status: final (revised 2026-10-31 from open-questions research)
 created: '2026-10-30'
 updated: '2026-10-31'
@@ -19,7 +19,9 @@ companions:
   - walkthrough.html
 ---
 
-# Architecture Spine — MBSC v1
+# Architecture Spine — SerExpAI v1
+
+SerExpAI is the product. MBSC (Multi-Basis Series Compression System) is the idea it represents. Cargo crates use the prefix `sxp-`.
 
 ## Design Paradigm
 
@@ -27,16 +29,16 @@ companions:
 
 | Crate (`crates/`) | Layer | Owns |
 | --- | --- | --- |
-| `mbsc-kernel` | Normative kernel | Normative Evaluator, sine LUT, modular residual math, Probability model, binary range coder, Block encode/decode, all Bitstream read and write primitives |
-| `mbsc-encoder` | Encoder side | Codebook, Baselines, Candidate enumeration, Block partition DP, Rate selector |
-| `mbsc-bench` | Shell | Corpus manifest, synthetic signals, benchmark arms, report |
-| `mbsc-cli` | Shell | `compress`, `decompress`, `benchmark` subcommands |
+| `sxp-kernel` | Normative kernel | Normative Evaluator, sine LUT, modular residual math, Probability model, binary range coder, Block encode/decode, all Bitstream read and write primitives |
+| `sxp-encoder` | Encoder side | Codebook, Baselines, Candidate enumeration, Block partition DP, Rate selector |
+| `sxp-bench` | Shell | Corpus manifest, synthetic signals, benchmark arms, report |
+| `sxp-cli` | Shell | `compress`, `decompress`, `benchmark` subcommands |
 
 ```mermaid
 graph TD
-    cli[mbsc-cli] --> bench[mbsc-bench]
-    cli --> encoder[mbsc-encoder]
-    cli --> kernel[mbsc-kernel]
+    cli[sxp-cli] --> bench[sxp-bench]
+    cli --> encoder[sxp-encoder]
+    cli --> kernel[sxp-kernel]
     bench --> encoder
     bench --> kernel
     encoder --> kernel
@@ -48,7 +50,7 @@ graph TD
 
 - **Binds:** all
 - **Prevents:** the decoder reaching the Codebook, the search or any third-party coder, and normative behaviour drifting with a dependency upgrade.
-- **Rule:** `mbsc-kernel` has zero third-party runtime dependencies and `#![forbid(unsafe_code)]`. It imports nothing from `mbsc-encoder`, `mbsc-bench` or `mbsc-cli`. The decode path is `mbsc-cli -> mbsc-kernel` only. CI fails if `cargo tree -p mbsc-kernel -e normal` lists any external crate (dev-dependencies such as proptest are allowed).
+- **Rule:** `sxp-kernel` has zero third-party runtime dependencies and `#![forbid(unsafe_code)]`. It imports nothing from `sxp-encoder`, `sxp-bench` or `sxp-cli`. The decode path is `sxp-cli -> sxp-kernel` only. CI fails if `cargo tree -p sxp-kernel -e normal` lists any external crate (dev-dependencies such as proptest are allowed).
 
 ### AD-2 — One coding path for every Candidate
 
@@ -72,7 +74,7 @@ graph TD
 
 - **Binds:** FR-2, FR-3, SM-2, SM-5
 - **Prevents:** encoder and decoder computing ŷ with different code, platform-dependent overflow, rounding or shift behaviour, and two readings of "normalized position".
-- **Rule:** The evaluator lives only in `mbsc-kernel`, and the encoder calls the same routine. All intermediates are signed 64-bit integers. The position input is `u = n << 5` (a fixed 16-bit position, always scaled by the maximum Block length 2048, never by the actual Block length). The polynomial is defined by this exact recurrence: `acc ← c_d`, then for k = d−1 down to 0, `acc ← ((acc · u) >> 16) + c_k`, then the result is `(acc + (1 << (Q−1))) >> Q`. Every shift is an arithmetic (floor) shift. With |c| < 2³¹ and degree at most 15 every intermediate stays below 2⁵². Every other family has a normative limit table chosen so every intermediate stays below 2⁶² (for example recurrence |a|, |b|, |c| < 2²⁴ and 1 < `m_mod` ≤ 2²⁴). ŷ is the final value reduced by `rem_euclid(256)`. Q is per Polynomial and Trigonometric Formula in [8, 24], stored as `Q − 8` in 5 bits. Halfway cases round toward +∞ for negative values too, and the evaluator uses no division other than `rem_euclid`. A stored value outside its range is an error, never clamped. The decoder rejects any parameter outside its limit, and uses no floating point. The sine LUT's values are normative data (published with a hash); how they were generated is not. The spec carries a boundary vector and a rejection vector for every limit, and a vector for a negative halfway case.
+- **Rule:** The evaluator lives only in `sxp-kernel`, and the encoder calls the same routine. All intermediates are signed 64-bit integers. The position input is `u = n << 5` (a fixed 16-bit position, always scaled by the maximum Block length 2048, never by the actual Block length). The polynomial is defined by this exact recurrence: `acc ← c_d`, then for k = d−1 down to 0, `acc ← ((acc · u) >> 16) + c_k`, then the result is `(acc + (1 << (Q−1))) >> Q`. Every shift is an arithmetic (floor) shift. With |c| < 2³¹ and degree at most 15 every intermediate stays below 2⁵². Every other family has a normative limit table chosen so every intermediate stays below 2⁶² (for example recurrence |a|, |b|, |c| < 2²⁴ and 1 < `m_mod` ≤ 2²⁴). ŷ is the final value reduced by `rem_euclid(256)`. Q is per Polynomial and Trigonometric Formula in [8, 24], stored as `Q − 8` in 5 bits. Halfway cases round toward +∞ for negative values too, and the evaluator uses no division other than `rem_euclid`. A stored value outside its range is an error, never clamped. The decoder rejects any parameter outside its limit, and uses no floating point. The sine LUT's values are normative data (published with a hash); how they were generated is not. The spec carries a boundary vector and a rejection vector for every limit, and a vector for a negative halfway case.
 
 ### AD-6 — Family-specific parameter layouts
 
@@ -92,7 +94,7 @@ The coder is a hand-written LZMA-style binary range coder (spec seed §6.1: 32-b
 
 - **Binds:** FR-5, FR-6, FR-9, FR-14
 - **Prevents:** Block cost depending on neighbouring Blocks, which would make partition search and per-Block Candidate costs inexact, and two owners of the serialisation code.
-- **Rule:** Each Block is byte-aligned. A coded Block consists of its header, its parameters and its own coder stream with its own termination. A Raw Block is its header followed by the Block's bytes verbatim. Model state resets at Block start. Payload length is not stored; the decoder consumes exactly the bytes decoding the Block's symbol count requires. The total size of a file is the sum of its Blocks' sizes plus the file header and the 4-byte CRC trailer. All Bitstream read and write primitives, including the file header and Block headers, live only in `mbsc-kernel`; `mbsc-encoder` composes them and never serialises a field itself.
+- **Rule:** Each Block is byte-aligned. A coded Block consists of its header, its parameters and its own coder stream with its own termination. A Raw Block is its header followed by the Block's bytes verbatim. Model state resets at Block start. Payload length is not stored; the decoder consumes exactly the bytes decoding the Block's symbol count requires. The total size of a file is the sum of its Blocks' sizes plus the file header and the 4-byte CRC trailer. All Bitstream read and write primitives, including the file header and Block headers, live only in `sxp-kernel`; `sxp-encoder` composes them and never serialises a field itself.
 
 ### AD-9 — Partition by free dynamic programming on a 256-byte grid
 
@@ -128,7 +130,7 @@ The coder is a hand-written LZMA-style binary range coder (spec seed §6.1: 32-b
 
 - **Binds:** FR-14, FR-15, SM-1, SM-4, SM-C1, SM-C2
 - **Prevents:** a verdict inflated by tuning-set leakage or synthetic signals, arms that differ in more than the Predictor, and sizes measured anywhere other than on the real stream.
-- **Rule:** Total encoded size is the byte length of the real Bitstream. Every benchmark round-trip is verified by decoding through the `mbsc-kernel` decode path; a mismatch fails the run. Each arm uses the AD-9 DP, the AD-10 key and the Whole-file raw check, and differs only in its Candidate set:
+- **Rule:** Total encoded size is the byte length of the real Bitstream. Every benchmark round-trip is verified by decoding through the `sxp-kernel` decode path; a mismatch fails the run. Each arm uses the AD-9 DP, the AD-10 key and the Whole-file raw check, and differs only in its Candidate set:
 
   | Arm | Candidate set |
   | --- | --- |
@@ -159,9 +161,9 @@ The coder is a hand-written LZMA-style binary range coder (spec seed §6.1: 32-b
 | Name | Version |
 | --- | --- |
 | Rust (stable), edition | 1.99.1, 2024 |
-| rayon (`mbsc-encoder`) | 1.12.0 |
-| clap (`mbsc-cli`) | 4.6.7 |
-| serde, serde_json, toml, sha2 (`mbsc-bench`) | 1.0.229, 1.0.154, 1.1.8, 0.11.1 |
+| rayon (`sxp-encoder`) | 1.12.0 |
+| clap (`sxp-cli`) | 4.6.7 |
+| serde, serde_json, toml, sha2 (`sxp-bench`) | 1.0.229, 1.0.154, 1.1.8, 0.11.1 |
 | proptest (dev) | 1.12.0 |
 | Python (reference decoder and fetch tool, stdlib only) | 3.14 (at least 3.14.4; 3.14.10 current) |
 | Target platforms | x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu |
@@ -197,10 +199,10 @@ serexpai/
   rust-toolchain.toml
   ci.sh
   crates/
-    mbsc-kernel/        # normative; zero third-party runtime deps
-    mbsc-encoder/
-    mbsc-bench/
-    mbsc-cli/
+    sxp-kernel/        # normative; zero third-party runtime deps
+    sxp-encoder/
+    sxp-bench/
+    sxp-cli/
   spec/
     bitstream.md        # normative spec (FR-11)
     sine_lut.*          # normative LUT data + hash
@@ -216,16 +218,16 @@ serexpai/
 
 | Capability / Area | Lives in | Governed by |
 | --- | --- | --- |
-| FR-1 Modular residual | `mbsc-kernel` | AD-3 |
-| FR-2, FR-3 Evaluator and layouts | `mbsc-kernel` | AD-5, AD-6, AD-15 |
-| FR-4 Codebook | `mbsc-encoder` | AD-13 |
-| FR-5 Per-Block search, FR-6 Rate selector | `mbsc-encoder` | AD-2, AD-9, AD-10 |
-| FR-7 Baselines | `mbsc-encoder` (kernel `encode_block`) | AD-2, AD-4, AD-14 |
-| FR-8 Probability model and binary coder | `mbsc-kernel` | AD-7, AD-8 |
-| FR-9, FR-10 Bitstream, raw fallback | `mbsc-kernel` | AD-8, AD-10, AD-11 |
+| FR-1 Modular residual | `sxp-kernel` | AD-3 |
+| FR-2, FR-3 Evaluator and layouts | `sxp-kernel` | AD-5, AD-6, AD-15 |
+| FR-4 Codebook | `sxp-encoder` | AD-13 |
+| FR-5 Per-Block search, FR-6 Rate selector | `sxp-encoder` | AD-2, AD-9, AD-10 |
+| FR-7 Baselines | `sxp-encoder` (kernel `encode_block`) | AD-2, AD-4, AD-14 |
+| FR-8 Probability model and binary coder | `sxp-kernel` | AD-7, AD-8 |
+| FR-9, FR-10 Bitstream, raw fallback | `sxp-kernel` | AD-8, AD-10, AD-11 |
 | FR-11 Spec document | `spec/` | AD-11, AD-15 |
-| FR-12, FR-13 `compress`, `decompress` | `mbsc-cli` | AD-12, AD-13 |
-| FR-14, FR-15 `benchmark`, manifest | `mbsc-bench` | AD-14 |
+| FR-12, FR-13 `compress`, `decompress` | `sxp-cli` | AD-12, AD-13 |
+| FR-14, FR-15 `benchmark`, manifest | `sxp-bench` | AD-14 |
 
 ## Deferred
 

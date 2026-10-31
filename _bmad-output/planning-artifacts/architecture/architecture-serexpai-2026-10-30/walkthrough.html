@@ -122,10 +122,10 @@ show(0);
 
 /* ---------- 1. crate graph ---------- */
 const crates = {
-  cli:     { x:300, y:20,  w:160, h:48, label:'mbsc-cli',     info:'Shell. compress, decompress, benchmark subcommands. Exit 0 or 1; temp file + rename; no config files, no logging framework.' },
-  bench:   { x:60,  y:130, w:170, h:48, label:'mbsc-bench',   info:'Shell. Corpus manifest (TOML), synthetic signals, benchmark arms, report (JSON). Verdict reads evaluation inputs only (AD-14).' },
-  encoder: { x:530, y:130, w:170, h:48, label:'mbsc-encoder', info:'Encoder side. Codebook (<= 4096 Formulas), Baselines, Candidate enumeration, partition DP, Rate selector. Deterministic under rayon (AD-13).' },
-  kernel:  { x:280, y:250, w:200, h:56, label:'mbsc-kernel',  info:'Normative kernel. Evaluator, sine LUT, residual math, bit-tree model, binary range coder, Block encode/decode, all Bitstream read/write. Zero third-party runtime deps, forbid(unsafe_code) (AD-1).', kernel:true },
+  cli:     { x:300, y:20,  w:160, h:48, label:'sxp-cli',     info:'Shell. compress, decompress, benchmark subcommands. Exit 0 or 1; temp file + rename; no config files, no logging framework.' },
+  bench:   { x:60,  y:130, w:170, h:48, label:'sxp-bench',   info:'Shell. Corpus manifest (TOML), synthetic signals, benchmark arms, report (JSON). Verdict reads evaluation inputs only (AD-14).' },
+  encoder: { x:530, y:130, w:170, h:48, label:'sxp-encoder', info:'Encoder side. Codebook (<= 4096 Formulas), Baselines, Candidate enumeration, partition DP, Rate selector. Deterministic under rayon (AD-13).' },
+  kernel:  { x:280, y:250, w:200, h:56, label:'sxp-kernel',  info:'Normative kernel. Evaluator, sine LUT, residual math, bit-tree model, binary range coder, Block encode/decode, all Bitstream read/write. Zero third-party runtime deps, forbid(unsafe_code) (AD-1).', kernel:true },
 };
 const edges = [['cli','bench'],['cli','encoder'],['bench','encoder'],['bench','kernel'],['encoder','kernel'],['cli','kernel']];
 const bad = [['kernel','encoder'],['kernel','bench']];

@@ -1,20 +1,20 @@
 ---
-title: "PRD: MBSC"
+title: "PRD: SerExpAI"
 status: final
 created: 2026-10-30
 updated: 2026-10-31
 ---
 
-# PRD: MBSC
-*Working title. [ASSUMPTION: MBSC is the product name; the repository is `serexpai`.]*
+# PRD: SerExpAI
+*SerExpAI is the product name. MBSC (Multi-Basis Series Compression System) is the idea it represents. The repository is `serexpai`. Cargo crates use the prefix `sxp-`.*
 
 ## 0. Document Purpose
 
-This PRD defines v1 of MBSC for the author (researcher and builder) and for downstream workflow owners: UX or CLI design, architecture, and epics and stories. The canonical technical contract is the spec at `_bmad-output/specs/spec-serexpai/`: `SPEC.md` and its companions, chiefly `acceptance-criteria.md` (cited below as AC with a capability number) and `corpora.md`. The *spec seed* is the draft of the normative Bitstream document, at `_bmad-output/planning-artifacts/architecture/architecture-serexpai-2026-10-30/bitstream-spec-seed.md`. This PRD was reconciled with it on 2026-10-31 and points to it for technical detail. The PRD's original inputs (the architecture review at `docs/mbsc_architecture_review.md` and the product brief at `_bmad-output/planning-artifacts/briefs/brief-serexpai-2026-10-30/` with its addendum) are kept for rationale and traceability only; some of their technical detail predates the spec. This PRD's own `addendum.md` holds the research digest (comparables, corpora, licences). Vocabulary is anchored in the Glossary (§3). Features group the functional requirements (§4), with FRs numbered globally. Inferences are tagged `[ASSUMPTION]` inline and indexed in §9.
+This PRD defines v1 of SerExpAI for the author (researcher and builder) and for downstream workflow owners: UX or CLI design, architecture, and epics and stories. The canonical technical contract is the spec at `_bmad-output/specs/spec-serexpai/`: `SPEC.md` and its companions, chiefly `acceptance-criteria.md` (cited below as AC with a capability number) and `corpora.md`. The *spec seed* is the draft of the normative Bitstream document, at `_bmad-output/planning-artifacts/architecture/architecture-serexpai-2026-10-30/bitstream-spec-seed.md`. This PRD was reconciled with it on 2026-10-31 and points to it for technical detail. The PRD's original inputs (the architecture review at `docs/mbsc_architecture_review.md` and the product brief at `_bmad-output/planning-artifacts/briefs/brief-serexpai-2026-10-30/` with its addendum) are kept for rationale and traceability only; some of their technical detail predates the spec. This PRD's own `addendum.md` holds the research digest (comparables, corpora, licences). Vocabulary is anchored in the Glossary (§3). Features group the functional requirements (§4), with FRs numbered globally. Inferences are tagged `[ASSUMPTION]` inline and indexed in §9.
 
 ## 1. Vision
 
-MBSC is a lossless compressor and decompressor, apparently novel (a shallow literature search found no prior work fitting trigonometric or recurrence formulas to raw bytes), delivered as a command-line tool. It predicts each byte of a block from a compact mathematical formula (polynomial, trigonometric or recurrence), then entropy-codes the modular residual with a binary range coder. Reconstruction is exact for any deterministic predictor, so a poor predictor costs size, never correctness. The encoder searches a codebook; the decoder only evaluates the formula whose parameters are in the bitstream, so it needs neither the codebook nor an index.
+SerExpAI is a lossless compressor and decompressor, delivered as a command-line tool. It represents MBSC (Multi-Basis Series Compression System), an idea apparently novel in this form (a shallow literature search found no prior work fitting trigonometric or recurrence formulas to raw bytes). It predicts each byte of a block from a compact mathematical formula (polynomial, trigonometric or recurrence), then entropy-codes the modular residual with a binary range coder. Reconstruction is exact for any deterministic predictor, so a poor predictor costs size, never correctness. The encoder searches a codebook; the decoder only evaluates the formula whose parameters are in the bitstream, so it needs neither the codebook nor an index.
 
 The project's central claim is untested: that compact formulas, once their parameters and modelling overhead are paid for, leave residuals cheap enough to beat simple baselines on real byte streams. v1 is therefore a rate-measurement experiment wrapped in a usable CLI. It must produce a trustworthy answer to one question: does the best available formula reduce total encoded size against constant, previous-byte and direct entropy-coding baselines, on real inputs?
 
@@ -26,7 +26,7 @@ If it does so by a margin large enough to act on (SM-1's go threshold), approxim
 
 - **Primary (the author):** find out, with defensible measurements, whether formula-as-predictor compression works on real byte streams, and have a correct, usable compressor if it does.
 - **Eventual (open-source audience):** `[ASSUMPTION: a large audience of CLI users, researchers and contributors, per the author's own wording]` reproduce the published results, read the bitstream spec, and trust that the round-trip is lossless.
-- **Commercial use (planned):** MBSC may be used or distributed commercially. v1 does not serve that use directly, but its licence, contribution model and patent posture must not close it off.
+- **Commercial use (planned):** SerExpAI may be used or distributed commercially. v1 does not serve that use directly, but its licence, contribution model and patent posture must not close it off.
 
 ### 2.2 Non-Users (v1)
 
@@ -41,6 +41,8 @@ If it does so by a margin large enough to act on (SM-1's go threshold), approxim
 
 ## 3. Glossary
 
+- **SerExpAI** — The product name. The repository is `serexpai`. Cargo crates use the prefix `sxp-`.
+- **MBSC** — Multi-Basis Series Compression System. The idea SerExpAI represents. In the benchmark, "full MBSC" means that idea with Formulas enabled.
 - **Block** — A contiguous span of input bytes coded as one unit. Has a length; the final Block of an input may be shorter than the nominal length (a partial Block).
 - **Predictor** — A deterministic function that, for each position in a Block, yields a predicted byte ŷ. A Formula, constant prediction or previous-byte prediction.
 - **Formula** — A Predictor from one Series family with fully parameterized, quantized parameters, evaluated by the Normative Evaluator.
@@ -211,7 +213,7 @@ The repository includes a standalone document describing the Bitstream and the N
 **Consequences (testable):**
 - The document is sufficient, with the test vectors, to write an independent decoder.
 - The repository includes a Python reference decoder (standard library only) written from the document, not translated from the Rust, and a generator of valid Bitstreams that also produces mutated copies of them for rejection testing. Every reject rule and limit is covered by at least one vector.
-- The Rust decoding kernel (`mbsc-kernel`) and the Python decoder agree on every vector in CI on both platforms. Before spec freeze this check does not block the benchmark; it must pass at spec freeze and before any public release.
+- The Rust decoding kernel (`sxp-kernel`) and the Python decoder agree on every vector in CI on both platforms. Before spec freeze this check does not block the benchmark; it must pass at spec freeze and before any public release.
 - The document is a v1 deliverable, so the audience goal is not closed off. It is published under CC BY 4.0, and the test vectors and normative tables under CC0.
 
 ### 4.6 Command-Line Interface
@@ -335,7 +337,6 @@ Still open:
 
 ## 9. Assumptions Index
 
-- Title: MBSC is the product name.
 - §2.1: the eventual open-source audience is large.
 - §2.2: not closing off embedding as a library later.
 - §2.3 UJ-3: a reviewer (Mei) reproduces the result from the spec and manifest.

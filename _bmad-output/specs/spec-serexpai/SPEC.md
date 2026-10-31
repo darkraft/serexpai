@@ -17,11 +17,11 @@ sources:
 
 > **Canonical contract.** This SPEC and the files in `companions:` are the complete, preservation-validated contract for what to build, test, and validate. Source documents listed in frontmatter are for traceability only — consult them only if you need narrative rationale or prose color this contract intentionally omits.
 
-# MBSC v1 (repo `serexpai`)
+# SerExpAI v1 (repo `serexpai`)
 
 ## Why
 
-A **vision to realize** and a **pain to solve** for one person, the author (researcher and builder). MBSC is a lossless CLI compressor that predicts each byte of a Block from a compact formula (polynomial, trigonometric, recurrence) and entropy-codes the modular residual with a binary range coder. It is apparently novel; its central claim is untested: that formulas, once parameter and modelling overhead are paid, leave residuals cheap enough to beat simple baselines on real byte streams. v1 is a rate-measurement experiment wrapped in a usable CLI, and must give one defensible answer: does the best formula reduce Total encoded size against constant, previous-byte and direct-entropy baselines on real inputs? Positive result: retrieval, format-aware preprocessing and SIMD entropy coding become worthwhile and the project grows toward an open-source compressor with a published Bitstream spec. Negative result: the repo stays as a reproducible negative result. An unreproducible or ambiguous outcome is the only unacceptable one.
+A **vision to realize** and a **pain to solve** for one person, the author (researcher and builder). SerExpAI is the product: a lossless CLI compressor. MBSC (Multi-Basis Series Compression System) is the idea it represents. SerExpAI predicts each byte of a Block from a compact formula (polynomial, trigonometric, recurrence) and entropy-codes the modular residual with a binary range coder. It is apparently novel; its central claim is untested: that formulas, once parameter and modelling overhead are paid, leave residuals cheap enough to beat simple baselines on real byte streams. v1 is a rate-measurement experiment wrapped in a usable CLI, and must give one defensible answer: does the best formula reduce Total encoded size against constant, previous-byte and direct-entropy baselines on real inputs? Positive result: retrieval, format-aware preprocessing and SIMD entropy coding become worthwhile and the project grows toward an open-source compressor with a published Bitstream spec. Negative result: the repo stays as a reproducible negative result. An unreproducible or ambiguous outcome is the only unacceptable one.
 
 ## Capabilities
 
@@ -99,7 +99,7 @@ A **vision to realize** and a **pain to solve** for one person, the author (rese
 
 ## Assumptions
 
-- MBSC is the product name; the repository is `serexpai`.
+- SerExpAI is the product name. MBSC (Multi-Basis Series Compression System) is the idea it represents. The repository is `serexpai`. Cargo crates use the prefix `sxp-`.
 - The eventual open-source audience is large (author's wording); v1 should not close it off, including later library embedding.
 - Block lengths 256/1024/2048 come from the architecture review. Magic `0x8D`, the 4-bit version (0 invalid, 15 reserved), the 5-bit Block header, the 1025-entry Q15 sine LUT and the 4-byte per-Block coder flush are confirmed by the 2026-10-31 research and freeze with the spec.
 - Gain aggregates summed Total encoded size per class. The best whole-input Baseline (chosen per input) is a consistency check only: the Baselines-only arm offers a superset of its Candidates under the same exact-size selection and is never larger, so SM-1's "smaller than both" is equivalent to "smaller than the Baselines-only arm".

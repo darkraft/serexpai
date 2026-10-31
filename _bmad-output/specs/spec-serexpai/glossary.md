@@ -1,7 +1,9 @@
-# Glossary — MBSC v1
+# Glossary — SerExpAI v1
 
 Terms are used exactly as written in code, spec and report.
 
+- **SerExpAI** — The product name. The repository is `serexpai`. Cargo crates use the prefix `sxp-`: `sxp-kernel`, `sxp-encoder`, `sxp-bench`, `sxp-cli`.
+- **MBSC** — Multi-Basis Series Compression System. The idea SerExpAI represents: predict each byte from a compact formula drawn from more than one series family, then entropy-code the modular residual. In the benchmark, "full MBSC" means that idea with Formulas enabled.
 - **Block** — Contiguous span of input bytes coded as one unit; the final Block may be shorter (partial Block).
 - **Predictor** — Deterministic function yielding predicted byte ŷ per Block position: a Formula, constant prediction or previous-byte prediction.
 - **Formula** — A Predictor from one Series family with fully parameterized, quantized parameters, evaluated by the Normative Evaluator.
@@ -26,4 +28,4 @@ Terms are used exactly as written in code, spec and report.
 - **Gain** — Any reduction in Total encoded size, summed over an Input class, for full MBSC versus both the Baselines-only arm and the best whole-input Baseline (smallest Total encoded size per input, summed over the class). No minimum margin; per-input wins and margin are also reported.
 - **Work count** — Host-independent encode cost: model decisions and coder steps per input byte, per arm. Wall-clock lives only in the timing log.
 - **Corpus-side transform** — Documented, versioned, hashed conversion applied by the fetch tool when defining a corpus input (e.g. 16-to-8-bit PCM). Not compressor preprocessing.
-- **Kernel / Shell** — `mbsc-kernel` is the normative decode-side crate; encoder, bench and CLI crates depend on it, never the reverse.
+- **Kernel / Shell** — `sxp-kernel` is the normative decode-side crate; encoder, bench and CLI crates depend on it, never the reverse.

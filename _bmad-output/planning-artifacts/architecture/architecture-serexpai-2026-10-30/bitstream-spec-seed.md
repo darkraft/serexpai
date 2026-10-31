@@ -10,7 +10,7 @@ spine: ARCHITECTURE-SPINE.md
 
 # MBSC Bitstream and Normative Evaluator: Spec Seed
 
-This is the starting outline of the normative spec for FR-11 (`spec/bitstream.md`). It turns the spine's rules (AD-3 and AD-5 to AD-11) into concrete layouts. Items tagged **[PROPOSED]** are strawman values the author must confirm or tune. Items tagged **[MEASURE]** are frozen only after measurement on `tuning` inputs. Everything else restates a spine decision. Per AD-15, once any of this is frozen a change bumps the format version.
+The product that implements this format is SerExpAI. MBSC (Multi-Basis Series Compression System) is the idea that format represents. This is the starting outline of the normative spec for FR-11 (`spec/bitstream.md`). It turns the spine's rules (AD-3 and AD-5 to AD-11) into concrete layouts. Items tagged **[PROPOSED]** are strawman values the author must confirm or tune. Items tagged **[MEASURE]** are frozen only after measurement on `tuning` inputs. Everything else restates a spine decision. Per AD-15, once any of this is frozen a change bumps the format version.
 
 ## 1. Conventions
 

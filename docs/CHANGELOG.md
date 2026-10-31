@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-10-31
+
+### Added
+
+- Spec kernel for MBSC v1 (`SPEC.md`, glossary, acceptance criteria, corpora companion) distilled from the PRD, architecture spine and product brief. It lives under `_bmad-output/` and is preserved on the `serexpai-bmad` record branch, not on `main`.
+- Research on the six open questions, and a claim chart of Microsoft US 11,234,023 B2 prepared to brief counsel. The pre-update PRD (`prd.before.md`) is kept beside the PRD on the record branch only.
+- `docs/decision_logs/`: spec source and gap-handling choices, the open-question walkthrough, the coder and checksum decisions, the PRD reconciliation choices, and this release's version and commit-message choices (2026 W44).
+- `README.md`: what MBSC is, the planned commands, and where the design documents live. It states that v1 uses a range coder and that there is no code yet.
+
+### Changed
+
+- **Bitstream format (design only, no code yet).** Format v1 entropy-codes with an LZMA-style binary range coder, not rANS. rANS is an informative appendix and would need a patent review plus a format version bump to adopt. Every file ends with a CRC-32 of the decoded bytes, so the expansion bound is N + 11 (the empty file is 7 bytes). The probability model holds a 16-bit probability with a symmetric update; the earlier 12-bit rule stalled and taxed perfect predictions.
+- Architecture spine and bitstream spec seed revised to match: range coder, CRC, corpora, clean-room decoder check, and a legal review of the adaptive probability update before the first public release.
+- PRD reconciled with the spec and re-finalized: range coder, CRC, chosen corpora, licence, SM-1 go threshold (a positive result below it is *marginal*), and eight open questions, none blocking the next phase.
+
+### Security
+
+- v1 avoids the decoder structure added to win allowance of US 11,234,023 B2 (no deferred state update, no gated symbol generation, no flush-or-keep field, no coder state across Blocks). This is a design safeguard for counsel, not a legal opinion.
+
 ## [0.0.3] - 2026-10-31
 
 ### Added

@@ -73,7 +73,7 @@
 </section>
 
 <section id="s-block" data-title="3. Block anatomy">
-  <p>A Block is a header, parameters and its own rANS stream (AD-8). Pick a kind to see the layout and its fixed cost.</p>
+  <p>A Block is a header, parameters and its own coder stream (AD-8). Pick a kind to see the layout and its fixed cost.</p>
   <div class="panel">
     <div class="row">
       <label>Kind <select id="kind"></select></label>
@@ -125,7 +125,7 @@ const crates = {
   cli:     { x:300, y:20,  w:160, h:48, label:'mbsc-cli',     info:'Shell. compress, decompress, benchmark subcommands. Exit 0 or 1; temp file + rename; no config files, no logging framework.' },
   bench:   { x:60,  y:130, w:170, h:48, label:'mbsc-bench',   info:'Shell. Corpus manifest (TOML), synthetic signals, benchmark arms, report (JSON). Verdict reads evaluation inputs only (AD-14).' },
   encoder: { x:530, y:130, w:170, h:48, label:'mbsc-encoder', info:'Encoder side. Codebook (<= 4096 Formulas), Baselines, Candidate enumeration, partition DP, Rate selector. Deterministic under rayon (AD-13).' },
-  kernel:  { x:280, y:250, w:200, h:56, label:'mbsc-kernel',  info:'Normative kernel. Evaluator, sine LUT, residual math, bit-tree model, rANS, Block encode/decode, all Bitstream read/write. Zero third-party runtime deps, forbid(unsafe_code) (AD-1).', kernel:true },
+  kernel:  { x:280, y:250, w:200, h:56, label:'mbsc-kernel',  info:'Normative kernel. Evaluator, sine LUT, residual math, bit-tree model, binary range coder, Block encode/decode, all Bitstream read/write. Zero third-party runtime deps, forbid(unsafe_code) (AD-1).', kernel:true },
 };
 const edges = [['cli','bench'],['cli','encoder'],['bench','encoder'],['bench','kernel'],['encoder','kernel'],['cli','kernel']];
 const bad = [['kernel','encoder'],['kernel','bench']];
@@ -172,10 +172,10 @@ drawEdges(); drawNodes();
 const steps = [
   ['Partition DP', 'encoder', 'One-dimensional DP over every 256-aligned offset. At offset o with r bytes left, allowed nominal lengths are every L <= r, plus (when r <= 2048) the smallest length >= r as a final Block. Optimal because costs are additive (AD-9).'],
   ['Enumerate Candidates', 'encoder', 'For each (offset, length): Raw, Direct, Previous-byte, Constant, and every Codebook Formula (<= 4096, regenerated from an integer-only recipe). Parallel via rayon, deterministic (AD-13).'],
-  ['kernel encode_block', 'kernel', 'The same function for every Candidate. Produces the predicted stream (Evaluator or Baseline), residual symbols, bit-tree decisions, then rANS in reverse. Returns the exact Block bytes and size (AD-2, AD-7).'],
+  ['kernel encode_block', 'kernel', 'The same function for every Candidate. Produces the predicted stream (Evaluator or Baseline), residual symbols, bit-tree decisions, then the range coder in forward order. Returns the exact Block bytes and size (AD-2, AD-7).'],
   ['Rate selector', 'encoder', 'Minimises (total size, Block count, lexicographic (length code, Candidate id)). Raw wins ties; Baselines beat Formulas on ties; no entropy screen in v1 (AD-10).'],
-  ['Write + raw check', 'kernel', 'The kernel writer serialises header and Blocks. The encoder compares with Whole-file raw and keeps the smaller; output is at most N + 7 bytes (AD-8, AD-10, AD-11).'],
-  ['Decode', 'kernel', 'Parse header, then Block by Block: read header, parameters, rANS stream; evaluate predictor, add residual mod 256. Rejects non-canonical lengths, trailing bytes, bad rANS end state. 64 KiB heap max (AD-11, AD-12).'],
+  ['Write + raw check', 'kernel', 'The kernel writer serialises header and Blocks. The encoder compares with Whole-file raw and keeps the smaller; every file ends with a CRC-32, and output is at most N + 11 bytes (AD-8, AD-10, AD-11).'],
+  ['Decode', 'kernel', 'Parse header, then Block by Block: read header, parameters, coder stream; evaluate predictor, add residual mod 256. Rejects non-canonical lengths, trailing bytes, a bad range-coder end state, a CRC mismatch. 64 KiB heap max (AD-11, AD-12).'],
   ['Atomic output', 'cli', 'Write to a temp file in the target directory and rename on success. A failure leaves no output file (AD-12).'],
 ];
 const stepsEl = document.getElementById('steps');
@@ -234,8 +234,8 @@ function drawBlock() {
   const lab = document.createElementNS(ns, 'text'); lab.setAttribute('x', 20); lab.setAttribute('y', 85);
   lab.textContent = `header + parameters: ${bits} bits, padded to ${hdrBytes} byte(s)`; svg.appendChild(lab);
   let tail, size;
-  if (kind === 0) { tail = `Raw: the Block's bytes follow verbatim (no rANS stream).`; size = hdrBytes + payload; }
-  else { tail = `rANS stream: payload ~${payload} B + 4 B flush (exact, AD-8).`; size = hdrBytes + payload + 4; }
+  if (kind === 0) { tail = `Raw: the Block's bytes follow verbatim (no coder stream).`; size = hdrBytes + payload; }
+  else { tail = `Coder stream: payload ~${payload} B + 4 B flush (exact, AD-8).`; size = hdrBytes + payload + 4; }
   document.getElementById('blockInfo').innerHTML = `<p>${tail}</p><p><b>Estimated Block size: ${size} bytes</b>. The selector uses the kernel's exact size, never this estimate. At 256 bytes the fixed cost is <b>${(((hdrBytes + (kind === 0 ? 0 : 4)) / 256) * 100).toFixed(1)}%</b> of the input span.</p>`;
 }
 ['kind', 'cw', 'deg', 'payload'].forEach(id => document.getElementById(id).oninput = drawBlock);
@@ -289,7 +289,7 @@ function drawDP() {
     counts[L]++; nb++; i = adv;
   }
   const lg = document.createElementNS(ns, 'text'); lg.setAttribute('x', 20); lg.setAttribute('y', 170); lg.textContent = 'chosen Blocks (nominal length); the last Block may be partial'; svg.appendChild(lg);
-  document.getElementById('dpInfo').innerHTML = `Total ${best[0]} bytes for N = ${N} (raw would be ${N + 7}). ${nb} Blocks: ${counts[256]} x 256, ${counts[1024]} x 1024, ${counts[2048]} x 2048.`;
+  document.getElementById('dpInfo').innerHTML = `Total ${best[0]} bytes for N = ${N} (raw would be at most ${N + 11}). ${nb} Blocks: ${counts[256]} x 256, ${counts[1024]} x 1024, ${counts[2048]} x 2048.`;
 }
 ['dpN', 'dpOv', 'dpSeed'].forEach(id => document.getElementById(id).oninput = drawDP);
 drawDP();
@@ -302,7 +302,7 @@ const ads = [
   ['AD-4','Formulas are positionwise','FR-3..5, FR-7','History-dependent predictors; cross-Block state'],
   ['AD-5','Single Evaluator, overflow impossible by construction','FR-2, FR-3, SM-2, SM-5','Different ŷ, platform-dependent arithmetic, two readings of position'],
   ['AD-6','Family-specific parameter layouts','FR-3, FR-9','Overloaded M; too-narrow fields'],
-  ['AD-7','One causal model, hand-written rANS','FR-6..8','Non-causal or per-Candidate models; non-invertible rANS totals'],
+  ['AD-7','One causal model, hand-written binary range coder','FR-6..8','Non-causal or per-Candidate models; non-invertible coder totals; patent-sensitive decoder structures'],
   ['AD-8','Blocks are self-contained and additive','FR-5, FR-6, FR-9, FR-14','Cross-Block cost coupling; split serialisation ownership'],
   ['AD-9','Partition by free DP on a 256-byte grid','FR-5, FR-6, FR-14','Greedy partitioning; unsignalled partial Blocks'],
   ['AD-10','Rate selector on exact size, bounded raw fallback','FR-6, FR-10, SM-3','Estimate-based choice; nondeterministic ties; expansion'],

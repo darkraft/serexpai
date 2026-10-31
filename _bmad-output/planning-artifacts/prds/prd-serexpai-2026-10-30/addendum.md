@@ -37,12 +37,12 @@ Depth that informs the PRD, architecture and the evaluation protocol but does no
 
 - Magic: zstd 4-byte `0xFD2FB528`; xz `FD 37 7A 58 5A 00` (first byte rules out the old LZMA format, last rules out text); gzip `1f 8b`.
 - Versioning: xz reserved bits must be zero and a decoder errors if one is set; a matching CRC with reserved bits set means "unsupported version", not "corrupt". Useful model for FR-9's format version.
-- Checksums: zstd optional XXH64 (low 32 bits); xz none, CRC32, CRC64 or SHA-256; brotli none. Relevant to PRD Open Question 7.
+- Checksums: zstd optional XXH64 (low 32 bits); xz none, CRC32, CRC64 or SHA-256; brotli none. Informed the CRC-32 decision (PRD FR-9).
 - Exit codes: gzip 0 success, 1 error, 2 warning; zstd 0 and 1.
 - Common flags to consider for later: `-d`, `-c`, `-k`, `-t` (test), `-l`, `-v`, `-q`, `-f`, stdin/stdout filtering.
 - Streaming: zstd and brotli are streamable with bounded memory; MBSC's per-block design fits framing for it later.
 
-## Licences of comparable tools (for Open Question 5)
+## Licences of comparable tools (informed the licence decision, PRD §6.1)
 
 - zstd: BSD or GPLv2
 - xz: 0BSD since Feb 2024 (earlier public domain)

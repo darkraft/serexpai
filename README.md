@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor, still at the design stage.
-Version **0.0.5**. There is no code and no command-line tool yet.
+Version **0.0.6**. There is no code and no command-line tool yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -50,15 +50,16 @@ On this branch:
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) records releases.
 - [`docs/decision_logs/`](docs/decision_logs/) records how design choices were made.
 
-The product brief, PRD, architecture spine, bitstream spec seed and the spec
-(`SPEC.md`) are modelling artifacts. They are kept off this branch and preserved
-on the append-only `serexpai-bmad` branch, under `_bmad-output/`. The spec is the
-contract later implementation builds against. The brief's mention of rANS is
-superseded: format v1 uses a range coder.
+The product brief, PRD, architecture spine, bitstream spec seed, the spec
+(`SPEC.md`) and the epic and story breakdown are modelling artifacts. They are
+kept off this branch and preserved on the append-only `serexpai-bmad` branch,
+under `_bmad-output/`. The spec is the contract later implementation builds
+against. The brief's mention of rANS is superseded: format v1 uses a range coder.
 
 ## Status
 
 Design only. The planned Cargo crates are `sxp-kernel`, `sxp-encoder`,
-`sxp-bench` and `sxp-cli`. The next step is implementation of the measurement
-core: the evaluator, the codebook search, the range coder, and the three
-commands above.
+`sxp-bench` and `sxp-cli`. The epic and story breakdown is on the
+`serexpai-bmad` branch. The next step is an implementation-readiness check,
+then the measurement core: the evaluator, the codebook search, the range coder,
+and the three commands above.

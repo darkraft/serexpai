@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-10-31
+
+### Changed
+
+- The product name is SerExpAI. MBSC (Multi-Basis Series Compression System) is the idea that product represents. The repository stays `serexpai`.
+- The planned Cargo crates are `sxp-kernel`, `sxp-encoder`, `sxp-bench` and `sxp-cli`.
+- `README.md` names the product, the idea and those crates. The spec, glossary, PRD, architecture spine and bitstream spec seed on the `serexpai-bmad` record branch say the same. The bitstream format is unchanged.
+
 ## [0.0.4] - 2026-10-31
 
 ### Added

@@ -653,3 +653,27 @@ ISO 8601 calendar week 44 of 2026.
 - Long (default)
 
 **Choice:** Long (default)
+
+## 2026-10-31 23:15 — release-manager — v0.0.5 version bump
+
+**Q:** Which version bump for this release?
+
+**Options:**
+- Patch 0.0.4 to 0.0.5 (default)
+- Minor 0.1.0
+
+**Choice:** Patch 0.0.4 to 0.0.5 (default)
+
+**Notes:** Naming only. Bitstream format unchanged. No manifest; changelog and README carry the version.
+
+## 2026-10-31 23:15 — release-manager — v0.0.5 commit message
+
+**Q:** Which commit message?
+
+**Options:**
+- Short
+- Long (default)
+
+**Choice:** Long (default)
+
+**Notes:** docs: name the product SerExpAI and the crates sxp-* (v0.0.5)

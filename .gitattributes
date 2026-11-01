@@ -1,0 +1,2 @@
+spec/vectors/*.bin binary
+spec/vectors/reject/*.bin binary

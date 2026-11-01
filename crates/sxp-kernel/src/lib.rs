@@ -1,4 +1,7 @@
-//! Normative kernel. Story 1.1 framing lands in later modules of this crate.
+//! Normative kernel. Whole-file raw framing for story 1.1.
+//!
+//! G0 is bitstream-spec-seed.md SHA-256
+//! `f4bea1e5b729db1df957563fd3e8e5bec70c0ab0a382f0f0afc7f9e82196e12e`.
 #![forbid(unsafe_code)]
 #![deny(
     clippy::unwrap_used,
@@ -9,3 +12,17 @@
     clippy::unimplemented,
     clippy::unreachable
 )]
+
+mod crc32;
+mod error;
+mod header;
+mod leb128;
+mod raw;
+mod residual;
+
+pub use crc32::{Crc32, crc32_iso_hdlc};
+pub use error::Error;
+pub use header::{Header, HeaderBytes, decode_header, encode_whole_file_raw_header};
+pub use leb128::{LENGTH_LIMIT, Leb128, decode_leb128, encode_leb128};
+pub use raw::{read_whole_file_raw, write_whole_file_raw};
+pub use residual::{direct_symbol, reconstruct, residual_symbol, signed_residual};

@@ -1,7 +1,7 @@
 # SerExpAI
 
-**SerExpAI** (repository `serexpai`) is a lossless compressor, still at the design stage.
-Version **0.0.7**. There is no code and no command-line tool yet.
+**SerExpAI** (repository `serexpai`) is a lossless compressor.
+Version **0.0.8**. `sxp-kernel` reads and writes whole-file raw, and it reconstructs a byte from any prediction. The command-line tool compiles and does not compress or decompress yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -25,9 +25,9 @@ bitstream compatibility between 0.x versions.
 
 Once the CLI exists:
 
-- `compress` writes a bitstream file from an input file.
-- `decompress` restores the original bytes.
-- `benchmark` reports total encoded size per input class, for SerExpAI and for the
+- `sxpc` writes a bitstream file from an input file.
+- `sxpd` restores the original bytes.
+- `sxpb` reports total encoded size per input class, for SerExpAI and for the
   baselines (constant prediction, previous-byte prediction, direct entropy coding),
   and checks that every round-trip is byte-identical.
 
@@ -35,10 +35,13 @@ Arguments are files. There is no standard-input or standard-output streaming in 
 
 ## What a bitstream contains
 
-A self-describing stream: a versioned header, per-block headers and formula
-parameters, a range-coder payload, and a CRC-32 of the original bytes. Output is
-at most N + 11 bytes. The format is specified in the design documents below and
-is not implemented yet.
+Whole-file raw is implemented. A file is magic `0x8D`, a flags byte (version 1,
+raw mode), a minimal unsigned LEB128 length, the original bytes, and a CRC-32 of
+those bytes. Output is at most N + 11 bytes. The empty file is 7 bytes.
+
+The rest of format v1 is still design: per-block headers, formula parameters,
+and a range-coder payload. Those documents are listed below. This release does
+not change that planned block layout.
 
 ## Documents
 
@@ -58,11 +61,14 @@ against. The brief's mention of rANS is superseded: format v1 uses a range coder
 
 ## Status
 
-Design only. The planned Cargo crates are `sxp-kernel`, `sxp-encoder`,
-`sxp-bench` and `sxp-cli`. The epic breakdown and the implementation-readiness
-report (2026-11-01, NEEDS WORK) are on the `serexpai-bmad` branch. Untagged
-kernel work and whole-file raw can start. Reportable evaluation stays gated on
+The Cargo workspace exists: `sxp-kernel`, `sxp-encoder`, `sxp-bench`, and
+`sxp-cli`. `ci.sh` formats, lints, and tests through `cargo` and `rustup` on
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`. Whole-file raw
+round-trips, and a predicted byte reconstructs exactly. Block framing, the
+range coder, the encoder, the benchmark, and the three commands above are
+still absent.
+
+The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
+WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on
 overlap K, the LJ Speech prefix check, the Debian tuning package, model
-constants, the production Codebook recipe, and counsel review. The measurement
-core is still the evaluator, the codebook search, the range coder, and the
-three commands above.
+constants, the production Codebook recipe, and counsel review.

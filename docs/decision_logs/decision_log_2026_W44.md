@@ -1257,3 +1257,74 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long
 
 **Notes:** Default. User invoked release-manager and ordered a push.
+
+## 2026-11-01 14:59 — bmad-create-story — Story 1.1 — AC01 repository directories
+
+**Q:** How should story 1.1 satisfy the inventory's required repository directories?
+
+**Options:**
+- Create only the four crates and spec/vectors/
+- Create tools/refdec/, tools/fetch/, and corpora/ as .gitkeep directories, and do not create bitstream.md, sine_lut.*, or manifest.toml
+
+**Choice:** Create tools/refdec/, tools/fetch/, and corpora/ as .gitkeep directories, and do not create bitstream.md, sine_lut.*, or manifest.toml
+
+**Notes:** Locked while revising story 1.1 after the plan review. Not a user prompt. D-04: a placeholder file does not close a gate. Later stories own the contents of those directories.
+
+## 2026-11-01 17:27 — release-manager — v0.0.8 version bump
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.7 to 0.0.8 (default)
+- Minor 0.0.7 to 0.1.0
+
+**Choice:** Patch 0.0.8
+
+**Notes:** Default. User invoked release-manager and ordered a push. Bitstream whole-file raw is new code; the planned block format is unchanged, so the bump stays a patch.
+
+## 2026-11-01 17:27 — release-manager — v0.0.8 commit message
+
+**Q:** Which commit message should this release use?
+
+**Options:**
+- Short: feat: round-trip whole-file raw (v0.0.8)
+- Long: feat: round-trip whole-file raw (v0.0.8) plus body covering the pinned workspace, the fixture commit, the named reject errors, and CI on both targets
+
+**Choice:** Long
+
+**Notes:** Default. User invoked release-manager and ordered a push.
+
+## 2026-11-01 18:20 — bmad-code-review — Review complete — next step after story 1.2
+
+**Q:** What would you like to do next?
+
+**Options:**
+- Start the next story — run dev-story to pick up the next ready-for-dev story
+- Re-run code review — address findings and review again
+- Done — end the workflow
+
+**Choice:** Re-run code review — address findings and review again
+
+## 2026-11-01 18:49 — release-manager — Version bump for the working-tree release since 0.0.7
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.7 to 0.0.8 (default)
+- Minor 0.0.7 to 0.1.0
+
+**Choice:** Patch 0.0.7 to 0.0.8 (default)
+
+**Notes:** 0.0.8 was already the unreleased working-tree version. It now covers whole-file raw framing and residual reconstruction. Bitstream format version stays 1.
+
+## 2026-11-01 18:49 — release-manager — Commit message for v0.0.8
+
+**Q:** Which commit message should the release use?
+
+**Options:**
+- Short
+- Long (default)
+
+**Choice:** Long (default)
+
+**Notes:** User invoked release-manager and push. Long is the skill default.

@@ -20,6 +20,7 @@ pub enum Error {
     TrailingBytes,
     LengthOutOfRange,
     ExcessPayload,
+    InvalidParameter,
     Io(ErrorKind),
 }
 
@@ -42,6 +43,7 @@ impl Error {
             Error::TrailingBytes => "TrailingBytes",
             Error::LengthOutOfRange => "LengthOutOfRange",
             Error::ExcessPayload => "ExcessPayload",
+            Error::InvalidParameter => "InvalidParameter",
             Error::Io(_) => "Io",
         }
     }

@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-11-01
+
+### Added
+
+- Implementation-readiness assessment for SerExpAI v1: **NEEDS WORK**. All 15 functional requirements have a story, and there is no critical epic-structure violation. Untagged kernel work, whole-file raw, and a private benchmark can proceed. The report lives under `_bmad-output/` and is preserved on the `serexpai-bmad` record branch, not on `main`.
+- `docs/decision_logs/`: the readiness document-set choices, owner decisions D-01, D-02, D-03, D-05 and D-06, the gates left open, the choice to keep Story 1.13 as one story, and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- **Bitstream format (design only, no code yet).** D-01, D-02 and D-03 are approved. Evaluator ranges stay; stored trigonometric coefficient width is at most 29 and recurrence width is at most 25. A Block is a 5-bit header, kind-specific fields, then checked zero padding to the next byte. The final partial span uses the smallest nominal length in {256, 1024, 2048} that covers the bytes left. Nothing is implemented, so there is no compatibility break.
+- D-05 and D-06 are approved. Growth path is at least 1% of a class's total encoded size and a majority of its evaluation inputs; a one-class win is negative and opens only the deferred PCM experiments. A budget miss shrinks the corpus first without changing frozen evaluation inputs, then lowers the Codebook cap.
+- Left open: overlap K, the LJ Speech prefix check, the Debian tuning package, model constants (D-07), counsel (D-08), and the production Codebook recipe (D-09).
+- `README.md` records version 0.0.7. The readiness check is no longer the next step.
+
 ## [0.0.6] - 2026-11-01
 
 ### Added

@@ -1062,3 +1062,198 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long
 
 **Notes:** Default. User invoked release-manager and ordered a push.
+
+## 2026-11-01 12:36 — bmad-check-implementation-readiness — Document discovery — PRD file set
+
+**Q:** Which PRD should the assessment use? prd.md is the later file (2026-10-31 23:12). prd.before.md is the snapshot from 11 minutes earlier. The addendum, reconcile notes, and review rubrics are companions, not a second PRD.
+
+**Options:**
+- prd.md only (recommended)
+- prd.md plus addendum.md
+- prd.before.md instead
+- prd.md plus addendum, reconcile notes, and review rubrics
+
+**Choice:** prd.md plus addendum, reconcile notes, and review rubrics
+
+## 2026-11-01 12:36 — bmad-check-implementation-readiness — Document discovery — architecture file set
+
+**Q:** Which architecture files should the assessment use? ARCHITECTURE-SPINE.md is the spine. bitstream-spec-seed.md, walkthrough.html, and the reviews/ folder sit beside it.
+
+**Options:**
+- ARCHITECTURE-SPINE.md only (recommended)
+- Spine plus bitstream-spec-seed.md
+- Spine plus the reviews/ folder
+- Spine, bitstream-spec-seed.md, and reviews/
+
+**Choice:** ARCHITECTURE-SPINE.md only
+
+## 2026-11-01 12:36 — bmad-check-implementation-readiness — Document discovery — missing UX
+
+**Q:** No UX document exists under planning artifacts or docs. How should the assessment treat that gap?
+
+**Options:**
+- Continue and record the missing UX document (recommended)
+- Pause this check until a UX document exists
+
+**Choice:** Continue and record the missing UX document
+
+## 2026-11-01 12:36 — bmad-check-implementation-readiness — Document discovery — outside architecture review
+
+**Q:** docs/mbsc_architecture_review.md sits outside the planning-artifacts folder. Should it be part of this assessment?
+
+**Options:**
+- Leave it out (recommended)
+- Include it as extra architecture context
+
+**Choice:** Leave it out
+
+## 2026-11-01 12:36 — bmad-check-implementation-readiness — Document discovery — continue to file validation
+
+**Q:** Select an Option: Continue to File Validation
+
+**Options:**
+- C — Continue to File Validation
+
+**Choice:** C
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-01 signed Formula coefficients
+
+**Q:** D-01, signed Formula coefficients. The evaluator allows trigonometric coefficients under 2^28 and recurrence coefficients under 2^24. The spec seed's field widths cannot store the top of those ranges.
+
+**Options:**
+- Keep the evaluator ranges. Allow trigonometric cw up to 29 and recurrence cw up to 25
+- Narrow the evaluator ranges to what the seed widths can store
+- Leave D-01 open
+
+**Choice:** Keep the evaluator ranges. Allow trigonometric cw up to 29 and recurrence cw up to 25
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-02 Block field alignment
+
+**Q:** D-02, where a Block's fields sit. The file header is already fixed. This decision is only the Block.
+
+**Options:**
+- Approve the seed: 5-bit length/kind header, then kind-specific fields, then checked zero padding to the next byte
+- Leave D-02 open
+
+**Choice:** Approve the seed packing
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-03 final partial Block
+
+**Q:** D-03, the final partial Block. Full Blocks stay 256, 1024, or 2048.
+
+**Options:**
+- Encode the final partial span with the smallest nominal length in {256, 1024, 2048} that is ≥ the bytes left
+- Leave D-03 open
+
+**Choice:** Smallest canonical nominal length that covers the bytes left
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — Overlap threshold K
+
+**Q:** Overlap threshold K. A tuning input that shares a run of K bytes with any evaluation input is replaced.
+
+**Options:**
+- Approve K = 1 KiB
+- Approve K = 4 KiB
+- Keep K proposed
+
+**Choice:** Keep K proposed. Exploratory checks may use 1 KiB; G2 stays blocked
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — LJ Speech prefixes
+
+**Q:** LJ Speech prefixes. The corpus plan samples tuning from LJ001–LJ025 and evaluation from LJ026–LJ050.
+
+**Options:**
+- Confirm that split now, without a metadata check
+- Leave it open until metadata.csv is checked
+- Drop the LJ Speech plan and pick a different PCM source later
+
+**Choice:** Leave it open until metadata.csv is checked
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — Debian tuning executable
+
+**Q:** Which Debian 13 package supplies the modern executable tuning input?
+
+**Options:**
+- Leave the package unnamed until one passes the overlap check
+- Pin Debian 13 coreutils, subject to the overlap check
+- Pin Debian 13 bash, subject to the overlap check
+
+**Choice:** Leave the package unnamed until one passes the overlap check
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-05 research classification
+
+**Q:** D-05, the growth-path bar and the meaning of a win on exactly one real class.
+
+**Options:**
+- Growth path: ≥1% of that class's total encoded size AND a majority of its evaluation inputs. A one-class win is negative and opens only the deferred PCM experiments
+- Growth path: ≥5% AND a majority. A one-class win is negative and the project stays a negative result
+- Any Gain on two classes is also the growth path. A one-class win is negative
+- Leave the numbers unset
+
+**Choice:** ≥1% AND a majority of evaluation inputs. A one-class win is negative and opens only the deferred PCM experiments
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-06 budget miss
+
+**Q:** D-06, what happens if a full benchmark exceeds 24 hours?
+
+**Options:**
+- Approve the PRD order: shrink the corpus first, keep each class's minimum, do not change frozen evaluation inputs, then lower the Codebook cap. Changing evaluation inputs is a new experiment
+- Any budget miss starts a new experiment revision. Do not shrink the frozen set
+- Decide only if a run actually misses 24 hours
+
+**Choice:** Approve the PRD shrink-then-cap order. Changing evaluation inputs is a new experiment
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-07 model constants
+
+**Q:** D-07, model constants and Formula widths. The strawman is initial p = 32768 and count cap 24.
+
+**Options:**
+- Leave them unfrozen until that tuning measurement exists
+- Freeze the strawman now as the v1 contract
+
+**Choice:** Leave them unfrozen until that tuning measurement exists
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — D-09 Codebook recipe
+
+**Q:** D-09, the production Codebook recipe.
+
+**Options:**
+- Leave the production recipe unset. Tests use a fixture recipe only
+- Draft a small integer-only recipe next, for approval before any reportable run
+
+**Choice:** Leave the production recipe unset. Tests use a fixture recipe only
+
+## 2026-11-01 13:01 — bmad-check-implementation-readiness — Story 1.13 sizing
+
+**Q:** Should Story 1.13 stay one story or be split?
+
+**Options:**
+- Keep Story 1.13 as one story with four groups
+- Split the four groups into four stories
+- Split only the budget group into its own story
+
+**Choice:** Keep Story 1.13 as one story with four groups
+
+## 2026-11-01 13:22 — release-manager — v0.0.7 version bump
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.6 to 0.0.7 (default)
+- Minor 0.0.6 to 0.1.0
+
+**Choice:** Patch 0.0.7
+
+**Notes:** Default patch bump. Design-only bitstream approvals (D-01, D-02, D-03). No code. Changelog and README carry the version; no language manifest exists.
+
+## 2026-11-01 13:22 — release-manager — v0.0.7 commit message
+
+**Q:** Which commit message should this release use?
+
+**Options:**
+- Short: docs: record implementation-readiness decisions (v0.0.7)
+- Long: docs: record implementation-readiness decisions (v0.0.7) plus body covering the readiness result, the approved design decisions, the gates left open, and Story 1.13
+
+**Choice:** Long
+
+**Notes:** Default. User invoked release-manager and ordered a push.

@@ -58,10 +58,10 @@ The actual Block length is `min(nominal, remaining)`. A nominal length is valid 
 | Direct, Previous-byte | none; the coder stream follows the section |
 | Constant | `c` (8 bits) |
 | Polynomial | `degree` (4 bits, 0–15), `q − 8` (5 bits, stored 0–16, 17–31 reject), `cw − 1` (5 bits, coefficient width 1–32), then `degree + 1` coefficients of `cw` bits, lowest power first |
-| Trigonometric | `order − 1` (4 bits, order 1–16), `q − 8` (5 bits), `cw − 1` (5 bits, limited to ≤ 28), `ω` (32 bits, unsigned, phase increment in turns/2³²), then `c0`, and `a_k`, `b_k` for k = 1..order, each `cw` bits |
-| Recurrence | `order − 1` (1 bit), `m_mod − 2` (24 bits; a stored value above 2²⁴ − 2 is rejected, so `m_mod` ≤ 2²⁴), `cw − 1` (5 bits, limited to ≤ 24), then `a`, `b` (order 1) or `a`, `b`, `c` (order 2) at `cw` bits each, then initial values `s0` (and `s1` for order 2) at 24 bits each |
+| Trigonometric | `order − 1` (4 bits, order 1–16), `q − 8` (5 bits), `cw − 1` (5 bits, stored cw 1–29; 30–32 rejected; D-01, approved 2026-11-01), `ω` (32 bits, unsigned, phase increment in turns/2³²), then `c0`, and `a_k`, `b_k` for k = 1..order, each `cw` bits |
+| Recurrence | `order − 1` (1 bit), `m_mod − 2` (24 bits; a stored value above 2²⁴ − 2 is rejected, so `m_mod` ≤ 2²⁴), `cw − 1` (5 bits, stored cw 1–25; 26–32 rejected; D-01, approved 2026-11-01), then `a`, `b` (order 1) or `a`, `b`, `c` (order 2) at `cw` bits each, then initial values `s0` (and `s1` for order 2) at 24 bits each |
 
-The `cw` field widths are **[PROPOSED]** and are the main lever on parameter cost; the width trade-off is **[MEASURE]**.
+The maximum `cw` is approved (trigonometric 29, recurrence 25, polynomial 32 with a stored −2³¹ rejected). The `cw` a Codebook uses inside those caps is **[MEASURE]**.
 
 Any field value outside its range, any `s0`/`s1 ≥ m_mod`, and any coefficient outside the family's limit is a decoder rejection.
 
@@ -95,7 +95,7 @@ value = (S + (1 << (q + 14))) >> (q + 15)
 
 `sin_lut(p)`: index `i = p >> 22` (10 bits, 0..1023), `f = (p >> 6) & 0xFFFF`, `v0 = LUT[i]`, `v1 = LUT[i + 1]`, result `v0 + (((v1 − v0) * f + (1 << 15)) >> 16)`. `LUT` has 1025 entries (the last equals the first so interpolation needs no wrap), values are `round(32767 · sin(2π i / 1024))` as signed 16-bit integers, so `|LUT| ≤ 32767 < 2¹⁵`. **[PROPOSED]** table size and scale. The table values are published with a SHA-256 in `spec/sine_lut.*` and are normative; the generator is not.
 
-Limits: `|c0|, |a_k|, |b_k| < 2²⁸` (`cw ≤ 28`), order ≤ 16. Bound: each term `< 2²⁸ · 2¹⁵ = 2⁴³`, at most 33 terms, so `|S| < 2⁴⁹` plus `|c0 << 15| < 2⁴³`.
+Limits: `|c0|, |a_k|, |b_k| < 2²⁸`, stored `cw` at most 29 (D-01, approved 2026-11-01), order ≤ 16. Bound: each term `< 2²⁸ · 2¹⁵ = 2⁴³`, at most 33 terms, so `|S| < 2⁴⁹` plus `|c0 << 15| < 2⁴³`.
 
 ### 4.3 Recurrence
 
@@ -105,7 +105,7 @@ order 2: x[0] = s0; x[1] = s1; x[n+2] = rem_euclid(a * x[n+1] + b * x[n] + c, m_
 value = x[n]
 ```
 
-Limits: `|a|, |b|, |c| < 2²⁴`, `2 ≤ m_mod ≤ 2²⁴`, `0 ≤ s0, s1 < m_mod`. Bound: `|a·x| < 2⁴⁸`, `|a·x + b·x'| < 2⁴⁹`, plus `c`. The recurrence is evaluated by iterating from `n = 0` within the Block, so it is positionwise in the sense of AD-4 (it depends on `n` and its own parameters only). `value = x[n]` is reduced by `rem_euclid(256)` like every other family.
+Limits: `|a|, |b|, |c| < 2²⁴`, stored `cw` at most 25 (D-01, approved 2026-11-01), `2 ≤ m_mod ≤ 2²⁴`, `0 ≤ s0, s1 < m_mod`. Bound: `|a·x| < 2⁴⁸`, `|a·x + b·x'| < 2⁴⁹`, plus `c`. The recurrence is evaluated by iterating from `n = 0` within the Block, so it is positionwise in the sense of AD-4 (it depends on `n` and its own parameters only). `value = x[n]` is reduced by `rem_euclid(256)` like every other family.
 
 ### 4.4 Previous-byte and Constant
 

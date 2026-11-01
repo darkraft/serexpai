@@ -2,7 +2,7 @@
 title: "PRD: SerExpAI"
 status: final
 created: 2026-10-30
-updated: 2026-10-31
+updated: 2026-11-01
 ---
 
 # PRD: SerExpAI
@@ -257,7 +257,7 @@ The user can run the benchmark over the Corpus manifest and get a per-class repo
 - The benchmark writes a sidecar file with the encoded cost of every evaluated Candidate per Block, so a later retrieval index can be validated against the exhaustive best (recall and excess compressed bytes). It is written by default for inputs up to a size stated in the spec, and on request above it, and the report states which inputs have one.
 - The report records the share of zero Residuals per class, so the review's claim that about 65% of residuals are zero on PCM audio and text is measured, not assumed.
 - The report records Codebook version and hash, Block lengths, tool version, Corpus manifest hash, tuning-input hashes and the overlap checker's result (FR-15).
-- The report gives a deterministic Work count per arm (model decisions and coder steps per input byte). Wall-clock time and host details go to a separate timing log, kept out of the report so reruns stay identical. A full benchmark run completes within 24 hours on one host, named in the timing log before the first full run. If it does not, the corpus shrinks first (keeping the FR-15 minimum per class), then the Codebook cap is lowered, and the report states the excess bytes this costs on tuning inputs.
+- The report gives a deterministic Work count per arm (model decisions and coder steps per input byte). Wall-clock time and host details go to a separate timing log, kept out of the report so reruns stay identical. A full benchmark run completes within 24 hours on one host, named in the timing log before the first full run. If it does not, the corpus shrinks first (keeping the FR-15 minimum per class), frozen evaluation inputs stay unchanged, and then the Codebook cap is lowered. Changing evaluation inputs is a new experiment revision. The report states the excess bytes this costs on tuning inputs. Approved 2026-11-01 (D-06).
 
 #### FR-15: Corpus manifest and synthetic signals
 
@@ -307,7 +307,7 @@ The benchmark inputs are defined and reproducible. Realizes UJ-3.
 Each SM cross-references the FR(s) it validates.
 
 **Primary**
-- **SM-1: Research answer.** On evaluation inputs, full MBSC achieves Gain (any reduction in Total encoded size) over the Baselines-only arm on at least two distinct Real input classes, so a reduction that comes only from switching among Baselines does not count. The best whole-input Baseline is reported alongside as a consistency check (§3 Gain). If fewer than two Real input classes can be tested (for example no suitable PCM), the result is *inconclusive*, not negative; otherwise, fewer than two classes with Gain is *negative*. Any reduction answers the research question, but going ahead with the growth path in §1 also needs, in each of the two classes, a Gain of at least a minimum share of the class's Total encoded size and wins on a majority of the class's evaluation inputs; a positive result below that is reported as *marginal*. Darian sets both numbers before the first evaluation run. What a win on exactly one Real input class means is Open Question 7. Validates FR-5, FR-6, FR-7, FR-14, FR-15.
+- **SM-1: Research answer.** On evaluation inputs, full MBSC achieves Gain (any reduction in Total encoded size) over the Baselines-only arm on at least two distinct Real input classes, so a reduction that comes only from switching among Baselines does not count. The best whole-input Baseline is reported alongside as a consistency check (§3 Gain). If fewer than two Real input classes can be tested (for example no suitable PCM), the result is *inconclusive*, not negative; otherwise, fewer than two classes with Gain is *negative*. Any reduction answers the research question, but going ahead with the growth path in §1 also needs, in each of the two classes, a Gain of at least 1% of the class's Total encoded size and wins on a majority of the class's evaluation inputs; a positive result below that is reported as *marginal*. A win on exactly one Real input class is negative. It opens only the deferred PCM experiments in §5, not the open-source compressor path. Approved 2026-11-01 (D-05). Validates FR-5, FR-6, FR-7, FR-14, FR-15.
 - **SM-2: Lossless round-trip.** 100% of benchmark inputs and test inputs (including empty, shorter than one Block, partial final Block and incompressible) decode byte-identically. Validates FR-1, FR-2, FR-9, FR-13, FR-14.
 - **SM-3: No regression on incompressible data.** On already-compressed inputs, Total encoded size does not exceed the N + 11 bound of FR-10. Validates FR-6, FR-10.
 
@@ -324,16 +324,18 @@ Each SM cross-references the FR(s) it validates.
 
 Resolved on 2026-10-31 and carried in the spec (`_bmad-output/specs/spec-serexpai/`): the Probability model (adaptive order-0, rebuilt by the decoder, nothing transmitted), the implementation language (Rust), the corpora (`corpora.md`), the licence and contribution model (§6.1), the Block lengths and partition rule (FR-5), the Codebook cap (FR-4), the integrity checksum (FR-9), the encode time budget (FR-14), and the numeric bounds (FR-10, FR-13). The entropy coder was also settled as a binary range coder (FR-8).
 
+Resolved on 2026-11-01: SM-1's growth path is a Gain of at least 1% of the class's Total encoded size and wins on a majority of that class's evaluation inputs (former Open Question 8). A win on exactly one Real input class is negative and opens only the deferred PCM experiments, not the open-source compressor path (former Open Question 7). On a 24-hour budget miss, the corpus shrinks first, frozen evaluation inputs stay fixed, and the Codebook cap is lowered second; changing evaluation inputs is a new experiment. Stored trigonometric cw is at most 29 and recurrence cw is at most 25, so the evaluator ranges stay representable. The cw used inside those caps is still measured (Open Question 2).
+
 Still open:
 
 1. **Deferred, not blocking v1:** does lookup retrieve fully parameterized Formulas (needs a coverage strategy) or candidate families fitted locally (needs a fitting procedure and compute budget)? v1 uses the first (FR-4).
-2. Which values win on tuning inputs for the measured constants: the model's count cap, rate schedule and initial probability, the coefficient widths and the trigonometric frequency width? Owner: Darian, before spec freeze.
-3. Is K = 1 KiB the right threshold for the tuning/evaluation overlap checker (FR-15)? Owner: Darian, before the first benchmark run.
-4. What is the Codebook's composition within the cap (Formulas per family, Q values, parameter ranges)? It comes from a documented, integer-only recipe tuned on tuning inputs; the recipe is still to be written. Owner: Darian, before the first benchmark run.
-5. Do the LJ Speech section prefixes run LJ001 to LJ050, as the tuning and evaluation split assumes? Confirm against the dataset's metadata before fixing the sample seed. Owner: Darian, before the first benchmark run.
+2. Which values win on tuning inputs for the measured constants: the model's count cap, rate schedule and initial probability, the coefficient width inside the approved caps (trigonometric cw at most 29, recurrence cw at most 25), and the trigonometric frequency width? The strawman initial probability 32768 and count cap 24 are not the contract. Owner: Darian, before spec freeze. Left unfrozen on 2026-11-01.
+3. Is K = 1 KiB the right threshold for the tuning/evaluation overlap checker (FR-15)? Owner: Darian, before the first benchmark run. Left proposed on 2026-11-01: exploratory checks may use 1 KiB, and a reportable evaluation stays blocked until K is confirmed.
+4. What is the Codebook's composition within the cap (Formulas per family, Q values, parameter ranges)? It comes from a documented, integer-only recipe tuned on tuning inputs; the recipe is still to be written. Owner: Darian, before the first benchmark run. Left unwritten on 2026-11-01. Tests use a labelled fixture recipe only.
+5. Do the LJ Speech section prefixes run LJ001 to LJ050, as the tuning and evaluation split assumes? Confirm against the dataset's metadata before fixing the sample seed. Owner: Darian, before the first benchmark run. Left unconfirmed on 2026-11-01, until `metadata.csv` is checked. The Debian 13 package for the modern tuning executable is also still unnamed.
 6. Legal review before the first public release: counsel reviews the adaptive probability update against live adaptive-coding patents (Qualcomm US 10,554,988 and US 10,148,961; Tencent US 12,348,780), plus general clearance. A permissive licence cannot grant rights to third-party patents, so open-source users would be exposed too. Owner: Darian, before the first public release.
-7. What does a win on exactly one Real input class mean, for example 8-bit PCM only? SM-1 calls it negative, but the research expects PCM to be the likeliest win, and a PCM-only win may argue for the deferred PCM experiments (byte-lane separation) rather than for stopping. The LJ Speech audio was sourced from 128 kbps MP3, which may flatter smooth predictors. Owner: Darian, before the first evaluation run.
-8. What are SM-1's go-threshold numbers: the minimum Gain share of a class's Total encoded size, and the majority of evaluation inputs that must win? Owner: Darian, before the first evaluation run.
+7. **Resolved 2026-11-01.** A win on exactly one Real input class is negative. It opens only the deferred PCM experiments (byte-lane separation), not the open-source compressor path. The LJ Speech audio was sourced from 128 kbps MP3, which may flatter smooth predictors; that caveat still belongs next to a PCM result.
+8. **Resolved 2026-11-01.** The growth-path bar is a Gain of at least 1% of the class's Total encoded size and wins on a majority of that class's evaluation inputs. A positive result below that is marginal.
 
 ## 9. Assumptions Index
 

@@ -93,7 +93,7 @@ A **vision to realize** and a **pain to solve** for one person, the author (rese
 
 ## Success signal
 
-- **SM-1:** on `evaluation` inputs, full MBSC's summed Total encoded size is smaller than both the Baselines-only arm and the best whole-input Baseline on at least two distinct Real input classes (any reduction counts; a gain from switching among Baselines does not). Fewer than two testable Real classes means *inconclusive*, not negative. Going ahead with the growth path also needs, in each of the two classes, Gain of at least a minimum share of the class's Total encoded size and wins on a majority of its evaluation inputs; a positive result below that is *marginal*. The numbers are set before the first evaluation run.
+- **SM-1:** on `evaluation` inputs, full MBSC's summed Total encoded size is smaller than both the Baselines-only arm and the best whole-input Baseline on at least two distinct Real input classes (any reduction counts; a gain from switching among Baselines does not). Fewer than two testable Real classes means *inconclusive*, not negative. Going ahead with the growth path also needs, in each of the two classes, Gain of at least 1% of the class's Total encoded size and wins on a majority of its evaluation inputs; a positive result below that is *marginal*. A win on exactly one Real class is negative and opens only the deferred PCM experiments, not the open-source compressor path. Approved 2026-11-01.
 - **SM-2:** 100% of benchmark and test inputs, including empty, sub-Block, partial-final-Block and incompressible, decode byte-identically. **SM-3:** already-compressed inputs never exceed the CAP-8 bound. **SM-4:** rerunning the benchmark from a clean checkout yields identical Total encoded sizes. **SM-5:** an independent decoder passes (CAP-9).
 - Counter-metrics, not to optimize: synthetic-signal Gain (proves only the encoder can match a Formula), Codebook fit to the evaluation corpora, and encoder speed.
 
@@ -108,8 +108,9 @@ A **vision to realize** and a **pain to solve** for one person, the author (rese
 
 ## Open Questions
 
-- Which values win on `tuning` inputs under the agreed procedure: count cap (24, 32, 60, 128 or 255), RECIP schedule (DELTA 0.5 or 1), initial probability (scalar or 8-entry per-depth table), coefficient widths `cw`, trigonometric ω width? Is K = 1 KiB right for the overlap checker?
-- Do LJ Speech prefixes run LJ001–LJ050 as assumed (confirm against `metadata.csv` before fixing the sample seed)?
-- What are SM-1's go-threshold numbers (minimum Gain share per class, majority of inputs)? Set before the first evaluation run.
-- What does a win on exactly one Real class mean (for example 8-bit PCM only, possibly flattered by MP3-sourced audio): negative, or grounds for the deferred PCM experiments?
-- What is the Codebook's composition within the cap (Formulas per family, Q values, parameter ranges)? It comes from the documented integer-only recipe, tuned on `tuning` inputs; the recipe is not yet written.
+- Which values win on `tuning` inputs under the agreed procedure: count cap (24, 32, 60, 128 or 255), RECIP schedule (DELTA 0.5 or 1), initial probability (scalar or 8-entry per-depth table), the coefficient width inside the approved caps (trigonometric `cw` at most 29, recurrence `cw` at most 25), and trigonometric ω width? Strawman `p = 32768` and cap 24 are not the contract. Left unfrozen on 2026-11-01.
+- Is K = 1 KiB right for the overlap checker? Left proposed on 2026-11-01. Exploratory checks may use 1 KiB. A reportable evaluation stays blocked until K is confirmed.
+- Do LJ Speech prefixes run LJ001–LJ050 as assumed (confirm against `metadata.csv` before fixing the sample seed)? Left unconfirmed on 2026-11-01. The Debian 13 package for the modern tuning executable is also still unnamed.
+- What is the Codebook's composition within the cap (Formulas per family, Q values, parameter ranges)? It comes from the documented integer-only recipe, tuned on `tuning` inputs. Left unwritten on 2026-11-01. Tests use a labelled fixture recipe only.
+
+Resolved 2026-11-01: the growth path is Gain of at least 1% of the class Total encoded size and wins on a majority of that class's evaluation inputs. A one-class win is negative and opens only the deferred PCM experiments. Stored trigonometric `cw` is at most 29 and recurrence `cw` is at most 25. On a 24-hour miss, shrink the corpus first without changing frozen evaluation inputs, then lower the Codebook cap.

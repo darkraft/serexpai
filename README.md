@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor, still at the design stage.
-Version **0.0.6**. There is no code and no command-line tool yet.
+Version **0.0.7**. There is no code and no command-line tool yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -59,7 +59,10 @@ against. The brief's mention of rANS is superseded: format v1 uses a range coder
 ## Status
 
 Design only. The planned Cargo crates are `sxp-kernel`, `sxp-encoder`,
-`sxp-bench` and `sxp-cli`. The epic and story breakdown is on the
-`serexpai-bmad` branch. The next step is an implementation-readiness check,
-then the measurement core: the evaluator, the codebook search, the range coder,
-and the three commands above.
+`sxp-bench` and `sxp-cli`. The epic breakdown and the implementation-readiness
+report (2026-11-01, NEEDS WORK) are on the `serexpai-bmad` branch. Untagged
+kernel work and whole-file raw can start. Reportable evaluation stays gated on
+overlap K, the LJ Speech prefix check, the Debian tuning package, model
+constants, the production Codebook recipe, and counsel review. The measurement
+core is still the evaluator, the codebook search, the range coder, and the
+three commands above.

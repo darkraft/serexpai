@@ -1,0 +1,15 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/sxp-kernel",
+    "crates/sxp-encoder",
+    "crates/sxp-bench",
+    "crates/sxp-cli",
+]
+
+[workspace.package]
+version = "0.0.7"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+rust-version = "1.99.1"

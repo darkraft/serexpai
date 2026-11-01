@@ -1,0 +1,17 @@
+[package]
+name = "sxp-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "sxp-cli"
+path = "src/main.rs"
+
+[dependencies]
+sxp-kernel = { path = "../sxp-kernel" }
+sxp-encoder = { path = "../sxp-encoder" }
+sxp-bench = { path = "../sxp-bench" }
+clap = "=4.6.7"

@@ -1,0 +1,146 @@
+# Provisional rule ids for story 1.1. Story 2.1 may adopt them.
+# payload-gzip.bin is gzip -9n of the ASCII line
+# "serexpai-story-1.1-already-compressed\n" (58 bytes).
+# SHA-256 bb97b5ff0d6edca7aad354076341f1f54a18faf886f29992d58b8c5d1dfd18e8
+
+[[vector]]
+id = "raw-empty"
+path = "whole-file-raw-empty.bin"
+kind = "stream"
+decoded = "hex:"
+
+[[vector]]
+id = "raw-123456789"
+path = "whole-file-raw-123456789.bin"
+kind = "stream"
+decoded = "hex:313233343536373839"
+
+[[vector]]
+id = "crc-123456789"
+path = "crc32-123456789.bin"
+kind = "crc"
+input = "hex:313233343536373839"
+
+[[vector]]
+id = "raw-a5"
+path = "payload-a5.bin"
+kind = "payload"
+
+[[vector]]
+id = "raw-gzip"
+path = "payload-gzip.bin"
+kind = "payload"
+
+[[vector]]
+id = "reject-empty"
+path = "reject/empty.bin"
+kind = "reject"
+error = "TruncatedHeader"
+
+[[vector]]
+id = "reject-truncated-header"
+path = "reject/truncated-header.bin"
+kind = "reject"
+error = "TruncatedHeader"
+
+[[vector]]
+id = "reject-bad-magic"
+path = "reject/bad-magic.bin"
+kind = "reject"
+error = "BadMagic"
+
+[[vector]]
+id = "reject-version-0"
+path = "reject/version-0.bin"
+kind = "reject"
+error = "BadVersion"
+
+[[vector]]
+id = "reject-version-2"
+path = "reject/version-2.bin"
+kind = "reject"
+error = "BadVersion"
+
+[[vector]]
+id = "reject-version-15"
+path = "reject/version-15.bin"
+kind = "reject"
+error = "BadVersion"
+
+[[vector]]
+id = "reject-reserved-bits"
+path = "reject/reserved-bits.bin"
+kind = "reject"
+error = "ReservedBits"
+
+[[vector]]
+id = "reject-mode-2"
+path = "reject/mode-2.bin"
+kind = "reject"
+error = "ReservedMode"
+
+[[vector]]
+id = "reject-mode-3"
+path = "reject/mode-3.bin"
+kind = "reject"
+error = "ReservedMode"
+
+[[vector]]
+id = "reject-blocked-empty"
+path = "reject/blocked-empty.bin"
+kind = "reject"
+error = "BlockedEmpty"
+
+[[vector]]
+id = "reject-leb-nonminimal"
+path = "reject/leb-nonminimal.bin"
+kind = "reject"
+error = "NonMinimalLeb128"
+
+[[vector]]
+id = "reject-leb-overflow"
+path = "reject/leb-overflow.bin"
+kind = "reject"
+error = "Leb128Overflow"
+
+[[vector]]
+id = "reject-leb-overflow-cont"
+path = "reject/leb-overflow-cont.bin"
+kind = "reject"
+error = "Leb128Overflow"
+
+[[vector]]
+id = "reject-leb-range-before-nonminimal"
+path = "reject/leb-range-before-nonminimal.bin"
+kind = "reject"
+error = "Leb128Overflow"
+
+[[vector]]
+id = "reject-leb-truncated"
+path = "reject/leb-truncated.bin"
+kind = "reject"
+error = "TruncatedLeb128"
+
+[[vector]]
+id = "reject-truncated-payload"
+path = "reject/truncated-payload.bin"
+kind = "reject"
+error = "TruncatedPayload"
+
+[[vector]]
+id = "reject-truncated-trailer"
+path = "reject/truncated-trailer.bin"
+kind = "reject"
+error = "TruncatedTrailer"
+
+[[vector]]
+id = "reject-crc-mismatch"
+path = "reject/crc-mismatch.bin"
+kind = "reject"
+error = "CrcMismatch"
+
+[[vector]]
+id = "reject-trailing"
+path = "reject/trailing.bin"
+kind = "reject"
+error = "TrailingBytes"

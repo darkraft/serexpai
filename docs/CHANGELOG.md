@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-11-01
+
+### Added
+
+- **Bitstream format.** Whole-file raw is implemented in `sxp-kernel`. A file is magic `0x8D`, flags for version 1 and raw mode, a minimal unsigned LEB128 length below `2^35`, the original bytes, and CRC-32/ISO-HDLC of those bytes. The empty file is 7 bytes. Size is `N + 6 + leb128_len(N)`, at most `N + 11`. The block layout, formula parameters, and range coder are unchanged and still not implemented.
+- Cargo workspace for `sxp-kernel`, `sxp-encoder`, `sxp-bench`, and `sxp-cli`, pinned to Rust 1.99.1 with an exact lockfile. `ci.sh` runs formatting, clippy with warnings denied, tests, and the kernel dependency check through `cargo` and `rustup`, including `aarch64-unknown-linux-gnu` under qemu-user.
+- Committed whole-file raw fixtures and named reject vectors under `spec/vectors/`, recorded in a commit that contains no framing code.
+- Modular residual reconstruction in `sxp-kernel`. For bytes `y` and `ŷ`, `δ = ((y − ŷ + 128) mod 256) − 128`, the coded symbol is `δ mod 256`, and `y = (ŷ + δ) mod 256`. Direct entropy coding emits `y` and does not take a residual. The SHA-256 of all 65,536 symbol bytes, `y` then `ŷ`, is `spec/vectors/residual-symbols.sha256`. Block framing and the range coder are still not implemented, so the bitstream layout is unchanged.
+- `docs/decision_logs/`: the story 1.1 directory choice and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- `README.md` records version 0.0.8. The kernel round-trips whole-file raw and reconstructs a byte from any prediction. The CLI still has no commands.
+
 ## [0.0.7] - 2026-11-01
 
 ### Added

@@ -20,3 +20,6 @@ bench-out/
 # Bytecode from local script checks
 __pycache__/
 *.pyc
+
+# Cargo build output
+/target/

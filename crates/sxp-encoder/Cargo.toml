@@ -1,0 +1,11 @@
+[package]
+name = "sxp-encoder"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sxp-kernel = { path = "../sxp-kernel" }
+rayon = "=1.12.0"

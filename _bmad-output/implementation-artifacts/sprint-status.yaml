@@ -1,5 +1,5 @@
 # generated: 2026-11-01T13:06:27+02:00
-# last_updated: 2026-11-01T13:06:27+02:00
+# last_updated: 2026-11-01T18:31:25+02:00
 # project: serexpai
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,16 +41,16 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-11-01T13:06:27+02:00
-last_updated: 2026-11-01T13:06:27+02:00
+last_updated: 2026-11-01T18:31:25+02:00
 project: serexpai
 project_key: NOKEY
 tracking_system: file-system
 story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
-  epic-1: backlog
-  1-1-round-trip-a-file-through-whole-file-raw: backlog
-  1-2-reconstruct-every-byte-from-its-prediction: backlog
+  epic-1: in-progress
+  1-1-round-trip-a-file-through-whole-file-raw: done
+  1-2-reconstruct-every-byte-from-its-prediction: done
   1-3-evaluate-a-polynomial-formula: backlog
   1-4-evaluate-a-trigonometric-formula: backlog
   1-5-evaluate-a-recurrence-formula: backlog

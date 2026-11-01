@@ -1,0 +1,35 @@
+---
+description: Build, test, and manage the Rust toolchain only through cargo and rustup
+alwaysApply: true
+---
+
+# Cargo and rustup
+
+All Rust work in this repository goes through `cargo` and `rustup`. Do not call compiler or lint binaries, and do not install a toolchain any other way.
+
+Use:
+
+- `cargo build`, `cargo test`, `cargo fmt`, `cargo clippy`, `cargo tree`, `cargo metadata`, `cargo fetch`
+- `rustup show`, `rustup toolchain install`, `rustup component add`, `rustup target add`, `rustup run`
+
+Do not use:
+
+- `rustc`, `rustfmt`, `cargo-fmt`, `clippy-driver`, or a path under `~/.rustup/toolchains/.../bin`
+- `RUSTC`, `CARGO_BUILD_RUSTC`, or a toolchain tarball
+- apt, snap, or a system `rustc` when `rustup` is missing. Stop and say rustup is required.
+
+`rust-toolchain.toml` selects the compiler. `cargo` in this tree must be the rustup proxy so that file takes effect. `ci.sh` calls `cargo` and `rustup` only.
+
+```bash
+# good
+rustup show
+cargo test --locked
+cargo clippy --all-targets --locked -- -D warnings
+rustup target add aarch64-unknown-linux-gnu
+cargo test --locked --target aarch64-unknown-linux-gnu
+
+# bad
+rustc src/lib.rs
+rustfmt --check crates/
+~/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo test
+```

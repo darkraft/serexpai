@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-11-01
+
+### Added
+
+- Polynomial evaluator in `sxp-kernel`. Degree is `0..=15`, Q is `8..=24`, and each coefficient is in `[−2^31 + 1, 2^31 − 1]`, lowest power first. Evaluation is signed 64-bit Horner with `u = n << 5`, arithmetic shifts, and `rem_euclid` 256. Out-of-range inputs return `InvalidParameter` and are not clamped. The SHA-256 of the degree-15, Q=24 alternating prediction sequence is `spec/vectors/polynomial-degree15-q24.sha256`.
+- `docs/decision_logs/`: the story 1.3 review choice to apply both patches, and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- **Bitstream format unchanged.** The evaluator is not framed. Block headers, formula parameters, and the range coder are still not implemented. Format version stays 1.
+- `README.md` records version 0.0.9. The kernel evaluates a polynomial. The CLI still has no commands.
+
 ## [0.0.8] - 2026-11-01
 
 ### Added

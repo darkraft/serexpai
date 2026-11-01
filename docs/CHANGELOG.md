@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.10] - 2026-11-01
+
+### Added
+
+- Trigonometric evaluator in `sxp-kernel`. Order is `1..=16`, Q is `8..=24`, `omega` is any unsigned 32-bit phase increment, and each coefficient is in `[−(2^28 − 1), 2^28 − 1]`. Layout is `c0`, then `a_k`, `b_k`. Evaluation is signed 64-bit: `theta = (n · omega) mod 2^32`, interpolation of the committed 1025-entry sine table, arithmetic shifts, and `rem_euclid` 256. Out-of-range inputs return `InvalidParameter` and are not clamped. The table is `spec/sine_lut.bin` (SHA-256 `6267f51aebd57812c68a389bb4de8f2c85da816db4338a01b21e7455ec7ca9df`). The SHA-256 of the order-16, Q=8 alternating prediction sequence is `spec/vectors/trigonometric-order16-q8.sha256`.
+- `docs/decision_logs/`: the story 1.4 review choice to apply both patches and to end that workflow, and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- **Bitstream format unchanged.** The trigonometric evaluator is not framed. Block headers, formula parameters, and the range coder are still not implemented. Format version stays 1. The sine table size remains marked proposed in the spec seed; this release commits the 1025-entry Q15 table the evaluator uses.
+- `README.md` records version 0.0.10. The kernel evaluates a polynomial and a trigonometric formula. The CLI still has no commands.
+
 ## [0.0.9] - 2026-11-01
 
 ### Added

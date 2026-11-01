@@ -1365,3 +1365,53 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long (default)
 
 **Notes:** User invoked release-manager and push. Long is the skill default.
+
+## 2026-11-01 21:40 — bmad-code-review — Story 1.4 code review, two patch findings, no decision-needed items
+
+**Q:** How would you like to handle the 2 patch findings?
+
+**Options:**
+- Apply every patch
+- Leave as action items
+- Walk through each patch
+
+**Choice:** Apply every patch
+
+**Notes:** User instruction was CS, DS and CR 1.4 until everything is fixed. That standing order is option 1.
+
+## 2026-11-01 22:20 — bmad-code-review — Story 1.4 review complete — next step
+
+**Q:** What would you like to do next?
+
+**Options:**
+- Start the next story — run dev-story for the next ready-for-dev story
+- Re-run code review — review the patched tree again
+- Done — end the workflow
+
+**Choice:** Done — end the workflow
+
+**Notes:** User replied 3.
+
+## 2026-11-01 22:21 — release-manager — v0.0.10 version bump
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.9 to 0.0.10 (default)
+- Minor 0.0.9 to 0.1.0
+
+**Choice:** Patch 0.0.9 to 0.0.10 (default)
+
+**Notes:** Trigonometric evaluator and sine table only. Bitstream format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.10. The CLI has no --version.
+
+## 2026-11-01 22:21 — release-manager — Commit message for v0.0.10
+
+**Q:** Which commit message should this release use?
+
+**Options:**
+- Short: feat: evaluate a trigonometric formula (v0.0.10)
+- Long: feat: evaluate a trigonometric formula (v0.0.10) plus body covering the sine table, phase wrap, rejection, the prediction hash, and the unchanged bitstream layout
+
+**Choice:** Long: feat: evaluate a trigonometric formula (v0.0.10) plus body covering the sine table, phase wrap, rejection, the prediction hash, and the unchanged bitstream layout
+
+**Notes:** User invoked release-manager and ordered a push. Long is the skill default.

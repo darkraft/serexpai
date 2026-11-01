@@ -1415,3 +1415,40 @@ ISO 8601 calendar week 44 of 2026.
 **Choice:** Long: feat: evaluate a trigonometric formula (v0.0.10) plus body covering the sine table, phase wrap, rejection, the prediction hash, and the unchanged bitstream layout
 
 **Notes:** User invoked release-manager and ordered a push. Long is the skill default.
+
+## 2026-11-01 22:48 — bmad-code-review — Story 1.5 review — patch handling
+
+**Q:** How would you like to handle the 6 patch findings?
+
+**Options:**
+- Apply every patch
+- Leave as action items
+- Walk through each patch
+
+**Choice:** Apply every patch
+
+**Notes:** The opening request was CS, DS, and CR 1.5 until everything is fixed. No decision-needed findings.
+
+## 2026-11-01 22:53 — release-manager — v0.0.11 version bump
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.10 to 0.0.11 (default)
+- Minor 0.0.10 to 0.1.0
+
+**Choice:** Patch 0.0.10 to 0.0.11 (default)
+
+**Notes:** Recurrence evaluator only. Bitstream format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.11. The CLI has no --version.
+
+## 2026-11-01 22:53 — release-manager — Commit message for v0.0.11
+
+**Q:** Which commit message should this release use?
+
+**Options:**
+- Short: feat: evaluate a recurrence formula (v0.0.11)
+- Long: feat: evaluate a recurrence formula (v0.0.11) plus body covering modulus remainder, order-1 rejection, the prediction hash, and the unchanged bitstream layout
+
+**Choice:** Long: feat: evaluate a recurrence formula (v0.0.11) plus body covering modulus remainder, order-1 rejection, the prediction hash, and the unchanged bitstream layout
+
+**Notes:** Default long message. Push of main and serexpai-bmad was requested.

@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-11-01
+
+### Added
+
+- Recurrence evaluator in `sxp-kernel`. Order is 1 or 2, `m_mod` is `2..=2^24`, each coefficient satisfies `|a|, |b|, |c| < 2^24`, and each initial state is strictly below `m_mod`. Order 1 is `x[n+1] = rem_euclid(a·x[n] + b, m_mod)`. Order 2 is `x[n+2] = rem_euclid(a·x[n+1] + b·x[n] + c, m_mod)`. `value` is `x[n]`; the prediction byte is `rem_euclid(value, 256)`. Out-of-range inputs return `InvalidParameter` and are not clamped. An order-1 formula rejects a third coefficient and a second state. The SHA-256 of the order-2, `m_mod = 2^24` prediction sequence is `spec/vectors/recurrence-order2-m24.sha256`.
+- `docs/decision_logs/`: the story 1.5 review choice to apply the six patches, and this release's version and commit-message choices (2026 W44).
+
+### Changed
+
+- **Bitstream format unchanged.** The recurrence evaluator is not framed. Block headers, formula parameters, and the range coder are still not implemented. Format version stays 1.
+- `README.md` records version 0.0.11. The kernel evaluates a polynomial, a trigonometric formula, and a recurrence formula. The CLI still has no commands.
+
 ## [0.0.10] - 2026-11-01
 
 ### Added

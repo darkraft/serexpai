@@ -1,4 +1,4 @@
-//! Normative kernel. Whole-file raw framing, the polynomial evaluator, and the trigonometric evaluator.
+//! Normative kernel. Whole-file raw framing, the polynomial evaluator, the trigonometric evaluator, and the recurrence evaluator.
 //!
 //! G0 is bitstream-spec-seed.md SHA-256
 //! `f4bea1e5b729db1df957563fd3e8e5bec70c0ab0a382f0f0afc7f9e82196e12e`.
@@ -19,6 +19,7 @@ mod header;
 mod leb128;
 mod polynomial;
 mod raw;
+mod recurrence;
 mod residual;
 mod trigonometric;
 
@@ -28,5 +29,6 @@ pub use header::{Header, HeaderBytes, decode_header, encode_whole_file_raw_heade
 pub use leb128::{LENGTH_LIMIT, Leb128, decode_leb128, encode_leb128};
 pub use polynomial::Polynomial;
 pub use raw::{read_whole_file_raw, write_whole_file_raw};
+pub use recurrence::Recurrence;
 pub use residual::{direct_symbol, reconstruct, residual_symbol, signed_residual};
 pub use trigonometric::{Trigonometric, check_sine_lut};

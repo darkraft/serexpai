@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.12] - 2026-11-02
+
+### Added
+
+- Binary range coder in `sxp-kernel`. Encoder state starts at `low = 0`, `range = 0xFFFFFFFF`, `cache = 0`, and `cache_size = 1`. Each decision takes a bit and `freq0` in `1..=4095`, with total 4096. Flush calls `shift_low` five times and omits the leading `0x00`. `exact_size` is the emitted length. An invalid frequency or bit returns `InvalidParameter`. A short buffer is `TruncatedCoder`, an initial code of `0xFFFFFFFF` is `SaturatedRangeCode`, and a final code other than 0 is `NonzeroRangeCode`. A truncated refill leaves `range` below `2^24`, so a later decode and finish stay truncated. The SHA-256 of the 2048-symbol, 16384-decision schedule is `spec/vectors/range-coder-2048.sha256`.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** The range coder is a kernel primitive and is not framed in a file. Block headers, formula parameters, and the probability model are still not implemented. Format version stays 1.
+- `README.md` records version 0.0.12. The kernel codes binary decisions and still does not write them into a bitstream. The CLI still has no commands.
+
 ## [0.0.11] - 2026-11-01
 
 ### Added

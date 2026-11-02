@@ -21,6 +21,9 @@ pub enum Error {
     LengthOutOfRange,
     ExcessPayload,
     InvalidParameter,
+    TruncatedCoder,
+    SaturatedRangeCode,
+    NonzeroRangeCode,
     Io(ErrorKind),
 }
 
@@ -44,6 +47,9 @@ impl Error {
             Error::LengthOutOfRange => "LengthOutOfRange",
             Error::ExcessPayload => "ExcessPayload",
             Error::InvalidParameter => "InvalidParameter",
+            Error::TruncatedCoder => "TruncatedCoder",
+            Error::SaturatedRangeCode => "SaturatedRangeCode",
+            Error::NonzeroRangeCode => "NonzeroRangeCode",
             Error::Io(_) => "Io",
         }
     }

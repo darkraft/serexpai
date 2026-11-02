@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.11**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, and evaluates polynomial, trigonometric, and recurrence formulas. The command-line tool compiles and does not compress or decompress yet.
+Version **0.0.12**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, and codes binary decisions with the range coder. The command-line tool compiles and does not compress or decompress yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -41,10 +41,11 @@ those bytes. Output is at most N + 11 bytes. The empty file is 7 bytes.
 
 The kernel can evaluate a polynomial formula, a trigonometric formula, and a
 recurrence formula. The trigonometric evaluator uses the committed 1025-entry
-sine table. None of those results is written into a file yet. The rest of
-format v1 is still design:
-per-block headers, formula parameters, and a range-coder payload. Those
-documents are listed below. This release does not change the bitstream layout.
+sine table. It also codes binary decisions with the range coder and reports
+the exact byte length. None of those results is written into a file yet. The
+rest of format v1 is still design: per-block headers, formula parameters, and
+a range-coder payload inside a Block. Those documents are listed below. This
+release does not change the bitstream layout.
 
 ## Documents
 
@@ -67,11 +68,11 @@ against. The brief's mention of rANS is superseded: format v1 uses a range coder
 The Cargo workspace exists: `sxp-kernel`, `sxp-encoder`, `sxp-bench`, and
 `sxp-cli`. `ci.sh` formats, lints, and tests through `cargo` and `rustup` on
 `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`. Whole-file raw
-round-trips, a predicted byte reconstructs exactly, and polynomial,
-trigonometric, and recurrence formulas produce the same prediction bytes on
-both targets.
-Block framing, the range
-coder, the encoder, the benchmark, and the three commands above are still absent.
+round-trips, a predicted byte reconstructs exactly, polynomial, trigonometric,
+and recurrence formulas produce the same prediction bytes on both targets, and
+the binary range coder round-trips fixed decision schedules on both targets.
+Block framing, the encoder, the benchmark, and the three commands above are
+still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

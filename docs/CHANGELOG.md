@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-11-02
+
+### Added
+
+- Order-0 probability model in `sxp-kernel`. A symbol is eight binary decisions, most significant bit first, through 255 nodes. Each node holds a 16-bit `p` and a saturating count. Bit 0 updates `p` by `(((65536 − p) · R) >> 16)` and bit 1 by `−((p · R) >> 16)`, in `u32`, with no clamp. `freq0 = max(p >> 4, 1)`. The strawman is provisional until D-07: scalar `p = 32768`, count cap 24, and `RECIP[n] = floor(65536 / (n + 2))`. The RECIP hash is `spec/vectors/model-recip-strawman.sha256`. The SHA-256 of symbols `0..=255` coded with that strawman is `spec/vectors/model-symbols-256.sha256`.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** The model is reconstructed from decisions already taken. No probability table is written into a file. Block framing is still not implemented. Format version stays 1.
+- `README.md` records version 0.0.13. The kernel adapts an order-0 model and still does not frame it. The CLI still has no commands.
+
 ## [0.0.12] - 2026-11-02
 
 ### Added

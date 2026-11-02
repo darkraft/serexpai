@@ -1,4 +1,4 @@
-//! Normative kernel. Whole-file raw framing, the polynomial, trigonometric, and recurrence evaluators, and the binary range coder.
+//! Normative kernel. Whole-file raw framing, the polynomial, trigonometric, and recurrence evaluators, the binary range coder, and the order-0 probability model.
 //!
 //! G0 is bitstream-spec-seed.md SHA-256
 //! `f4bea1e5b729db1df957563fd3e8e5bec70c0ab0a382f0f0afc7f9e82196e12e`.
@@ -17,6 +17,7 @@ mod crc32;
 mod error;
 mod header;
 mod leb128;
+mod model;
 mod polynomial;
 mod range_coder;
 mod raw;
@@ -28,6 +29,10 @@ pub use crc32::{Crc32, crc32_iso_hdlc};
 pub use error::Error;
 pub use header::{Header, HeaderBytes, decode_header, encode_whole_file_raw_header};
 pub use leb128::{LENGTH_LIMIT, Leb128, decode_leb128, encode_leb128};
+pub use model::{
+    DecisionTrace, InitialProbability, ModelConfig, NodeState, Order0Model, STRAWMAN_CAP,
+    STRAWMAN_P, STRAWMAN_RECIP,
+};
 pub use polynomial::Polynomial;
 pub use range_coder::{
     DecoderState, EncoderState, RangeDecoder, RangeEncoder, decode_schedule, encode_schedule,

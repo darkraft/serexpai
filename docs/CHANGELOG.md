@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-11-03
+
+### Added
+
+- Baseline selection in `sxp-encoder`. For each allowed span the encoder asks `sxp-kernel` for the exact encoded size of Raw, Direct, Previous-byte, and all 256 Constant blocks. The partition minimises that size, then the block count, then the length code and candidate id. Whole-file raw wins when the blocks are not strictly smaller than the input, including the empty 7-byte file. A fixed-length arm still ends on the canonical nominal, so the existing decoder accepts it. Header pruning and one or two threads write the same bytes.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** The encoder does not pack a field. It calls the kernel's block and whole-file writers. Format version stays 1. Formula search, the benchmark, and the CLI commands are still absent.
+- `README.md` records version 0.0.15. The encoder chooses baseline blocks. The CLI still has no commands.
+
 ## [0.0.14] - 2026-11-03
 
 ### Added

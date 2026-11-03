@@ -74,3 +74,27 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long: feat: round-trip one baseline block (v0.0.14) plus body covering the 5-bit header, per-block model reset, and format version 1
 
 **Notes:** Default long message. User ordered the release and a push.
+
+## 2026-11-03 12:17 — release-manager — Version bump for the baseline-selection release
+
+**Q:** Which version bump for the working-tree release since 0.0.14?
+
+**Options:**
+- Patch 0.0.14 to 0.0.15 (default)
+- Minor 0.0.14 to 0.1.0
+
+**Choice:** Patch 0.0.14 to 0.0.15 (default)
+
+**Notes:** User invoked release-manager and ordered a push. The encoder chooses existing baseline blocks. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.15. The CLI has no --version.
+
+## 2026-11-03 12:17 — release-manager — Commit message for v0.0.15
+
+**Q:** Which commit message should the v0.0.15 release use?
+
+**Options:**
+- Short: feat: select baselines by exact size (v0.0.15)
+- Long: feat: select baselines by exact size (v0.0.15) plus body covering exact block size, the partition key, the whole-file raw tie, and format version 1
+
+**Choice:** Long: feat: select baselines by exact size (v0.0.15) plus body covering exact block size, the partition key, the whole-file raw tie, and format version 1
+
+**Notes:** User invoked release-manager and ordered a push. Long is the skill default.

@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.17**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. `sxp-cli compress` writes that search, and `sxp-cli decompress` restores the file.
+Version **0.0.18**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. `sxp-cli compress` writes that search, and `sxp-cli decompress` restores the file. `sxp-bench` generates three 4096-byte synthetic signals from those kernel evaluators. `tools/fetch` checks a committed corpus manifest and does not download it. The corpus gate is not ready.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -32,6 +32,8 @@ There is no `--version`, `--recipe`, `--threads`, or `--force`. The benchmark
 command is still absent.
 
 Arguments are files. There is no standard-input or standard-output data path.
+
+`python3 tools/fetch/fetch.py` reads local fixtures and the manifest. `extract` and `pin` check an archive. `transform pcm16le-to-u8` and `transform slice` write derived bytes. `select-pcm` orders clips under a budget. `overlap` looks for a shared run. `gate` prints the corpus report and exits 0 even when the gate is not ready. A typed error exits 1. The tool does not open a network connection. Python tests are host-only and are not part of `ci.sh`.
 
 ## What a bitstream contains
 
@@ -83,8 +85,9 @@ targets, and a blocked file of baseline or formula Blocks round-trips on both
 targets. The encoder selects among the baselines by exact encoded size,
 partitions the input, lets whole-file raw win a tie, and searches the labelled
 fixture codebook the same way. `sxp-cli compress` and `sxp-cli decompress`
-round-trip a file on both targets. The production recipe and the benchmark
-are still absent.
+round-trip a file on both targets. The corpus manifest and its gate report
+are committed, and the corpus gate stays not ready. The production recipe and
+the benchmark are still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

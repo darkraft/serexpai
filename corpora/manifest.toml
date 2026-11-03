@@ -1,0 +1,565 @@
+schema = 1
+
+[k]
+bytes = 1024
+status = "proposed"
+
+[lj]
+seed = ""
+metadata_checked = false
+prefixes_confirmed = false
+
+[pcm.tuning]
+prefixes = ["LJ001", "LJ002", "LJ003", "LJ004", "LJ005", "LJ006", "LJ007", "LJ008", "LJ009", "LJ010", "LJ011", "LJ012", "LJ013", "LJ014", "LJ015", "LJ016", "LJ017", "LJ018", "LJ019", "LJ020", "LJ021", "LJ022", "LJ023", "LJ024", "LJ025"]
+
+[pcm.evaluation]
+prefixes = ["LJ026", "LJ027", "LJ028", "LJ029", "LJ030", "LJ031", "LJ032", "LJ033", "LJ034", "LJ035", "LJ036", "LJ037", "LJ038", "LJ039", "LJ040", "LJ041", "LJ042", "LJ043", "LJ044", "LJ045", "LJ046", "LJ047", "LJ048", "LJ049", "LJ050"]
+
+[replacement.text]
+rule = "Evaluation inputs stay fixed. A tuning input that fails the overlap check is dropped and replaced by another Calgary or Canterbury input that passes. No stripping, no moving evaluation slices, no allowlist."
+
+[debian_tuning]
+package = ""
+
+[[input]]
+id = "canterbury-alice29"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "alice29.txt"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "canterbury-lcet10"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "lcet10.txt"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "canterbury-plrabn12"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "plrabn12.txt"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "canterbury-cp.html"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "cp.html"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "canterbury-xargs.1"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "xargs.1"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "calgary-book1"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "book1"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "calgary-book2"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "book2"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "calgary-paper1"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "paper1"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "calgary-paper2"
+class = "text"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "paper2"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "silesia-dickens"
+class = "text"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "none stated"
+source = "http://sun.aei.polsl.pl/~sdeor/corpus/silesia.zip"
+source_kind = "zip"
+member = "dickens"
+archive_sha256 = ""
+member_md5 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[input.parameters]
+length = 3145728
+
+[[input]]
+id = "silesia-webster"
+class = "text"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "none stated"
+source = "http://sun.aei.polsl.pl/~sdeor/corpus/silesia.zip"
+source_kind = "zip"
+member = "webster"
+archive_sha256 = ""
+member_md5 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[input.parameters]
+length = 3145728
+
+[[input]]
+id = "silesia-xml"
+class = "text"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "none stated"
+source = "http://sun.aei.polsl.pl/~sdeor/corpus/silesia.zip"
+source_kind = "zip"
+member = "xml"
+archive_sha256 = ""
+member_md5 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[input.parameters]
+length = 3145728
+
+[[input]]
+id = "silesia-reymont"
+class = "text"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "none stated"
+source = "http://sun.aei.polsl.pl/~sdeor/corpus/silesia.zip"
+source_kind = "zip"
+member = "reymont"
+archive_sha256 = ""
+member_md5 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[input.parameters]
+length = 3145728
+
+[[input]]
+id = "lj-tuning"
+class = "pcm"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "public domain"
+source = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
+source_kind = "tar.bz2"
+member = ""
+archive_sha256 = ""
+transform = "pcm16le-to-u8"
+transform_version = 1
+derived_sha256 = ""
+caveat = "LJ Speech was sourced from 128 kbps MP3; one speaker"
+
+[[input]]
+id = "lj-evaluation"
+class = "pcm"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "public domain"
+source = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
+source_kind = "tar.bz2"
+member = ""
+archive_sha256 = ""
+transform = "pcm16le-to-u8"
+transform_version = 1
+derived_sha256 = ""
+caveat = "LJ Speech was sourced from 128 kbps MP3; one speaker"
+
+[[input]]
+id = "lj-tuning-raw16"
+class = "pcm"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "public domain"
+source = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
+source_kind = "tar.bz2"
+member = ""
+archive_sha256 = ""
+transform = "pcm16le-raw"
+transform_version = 1
+derived_sha256 = ""
+caveat = "LJ Speech was sourced from 128 kbps MP3; one speaker"
+
+[[input]]
+id = "lj-evaluation-raw16"
+class = "pcm"
+role = "evaluation"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "public domain"
+source = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
+source_kind = "tar.bz2"
+member = ""
+archive_sha256 = ""
+transform = "pcm16le-raw"
+transform_version = 1
+derived_sha256 = ""
+caveat = "LJ Speech was sourced from 128 kbps MP3; one speaker"
+
+[[input]]
+id = "calgary-obj1"
+class = "executable"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "obj1"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "calgary-obj2"
+class = "executable"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/calgary.tar.gz"
+source_kind = "tar.gz"
+member = "obj2"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "canterbury-sum"
+class = "executable"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "https://corpus.canterbury.ac.nz/resources/cantrbry.tar.gz"
+source_kind = "tar.gz"
+member = "sum"
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "debian-tuning-amd64"
+class = "executable"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "debian-tuning-arm64"
+class = "executable"
+role = "tuning"
+counts_toward_sm1 = false
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "silesia-ooffice"
+class = "executable"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "recorded"
+licence = "none stated"
+source = "http://sun.aei.polsl.pl/~sdeor/corpus/silesia.zip"
+source_kind = "zip"
+member = "ooffice"
+archive_sha256 = ""
+member_md5 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = "same packages built for two architectures"
+
+[[input]]
+id = "debian-busybox-static-amd64"
+class = "executable"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = "same packages built for two architectures"
+
+[[input]]
+id = "debian-ripgrep-amd64"
+class = "executable"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = "same packages built for two architectures"
+
+[[input]]
+id = "debian-busybox-static-arm64"
+class = "executable"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = "same packages built for two architectures"
+
+[[input]]
+id = "debian-ripgrep-arm64"
+class = "executable"
+role = "evaluation"
+counts_toward_sm1 = true
+licence_state = "unresolved"
+source = "https://snapshot.debian.org/"
+source_kind = "deb"
+member = ""
+archive_sha256 = ""
+transform = "slice"
+transform_version = 1
+derived_sha256 = ""
+caveat = "same packages built for two architectures"
+
+[[input]]
+id = "enwik8-zip"
+class = "compressed"
+role = "evaluation"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = "http://mattmahoney.net/dc/enwik8.zip"
+source_kind = "direct"
+member = ""
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "flac-subset"
+class = "compressed"
+role = "evaluation"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "CC0"
+source = "https://github.com/ietf-wg-cellar/flac-test-files"
+source_kind = "direct"
+member = ""
+archive_sha256 = ""
+transform = "identity"
+transform_version = 1
+derived_sha256 = ""
+caveat = ""
+
+[[input]]
+id = "synthetic-polynomial"
+class = "synthetic"
+role = "synthetic"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = ""
+source_kind = "kernel-predict"
+member = ""
+archive_sha256 = ""
+transform = "kernel-predict"
+transform_version = 1
+derived_sha256 = "7364c598b868aae6247ed6554b1fc9e2e251220f237c913f0ac2720a5b2b5e92"
+caveat = ""
+
+[input.parameters]
+degree = 1
+q = 8
+coefficients = [0, 65536]
+blocks = 2
+
+[[input]]
+id = "synthetic-trigonometric"
+class = "synthetic"
+role = "synthetic"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = ""
+source_kind = "kernel-predict"
+member = ""
+archive_sha256 = ""
+transform = "kernel-predict"
+transform_version = 1
+derived_sha256 = "1a2fa720c8ec350f1519e98632eae12add852e2d73c4ce931fd1d91129e93fcb"
+caveat = ""
+
+[input.parameters]
+order = 1
+q = 8
+omega = 16777216
+coefficients = [32768, 32000, 0]
+blocks = 2
+
+[[input]]
+id = "synthetic-recurrence"
+class = "synthetic"
+role = "synthetic"
+counts_toward_sm1 = false
+licence_state = "recorded"
+licence = "none stated"
+source = ""
+source_kind = "kernel-predict"
+member = ""
+archive_sha256 = ""
+transform = "kernel-predict"
+transform_version = 1
+derived_sha256 = "90b1408a5ea7b47f68e2ed160763d5f1d196a4533e74ad67a357005466a1c291"
+caveat = ""
+
+[input.parameters]
+order = 2
+m_mod = 256
+coefficients = [1, 1, 0]
+state = [0, 1]
+blocks = 2

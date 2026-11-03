@@ -1,0 +1,424 @@
+{
+  "corpus_gate_ready": false,
+  "counts_toward_sm1": [
+    "debian-busybox-static-amd64",
+    "debian-busybox-static-arm64",
+    "debian-ripgrep-amd64",
+    "debian-ripgrep-arm64",
+    "lj-evaluation",
+    "silesia-dickens",
+    "silesia-ooffice",
+    "silesia-reymont",
+    "silesia-webster",
+    "silesia-xml"
+  ],
+  "excluded_from_sm1": [
+    "calgary-book1",
+    "calgary-book2",
+    "calgary-obj1",
+    "calgary-obj2",
+    "calgary-paper1",
+    "calgary-paper2",
+    "canterbury-alice29",
+    "canterbury-cp.html",
+    "canterbury-lcet10",
+    "canterbury-plrabn12",
+    "canterbury-sum",
+    "canterbury-xargs.1",
+    "debian-tuning-amd64",
+    "debian-tuning-arm64",
+    "enwik8-zip",
+    "flac-subset",
+    "lj-evaluation-raw16",
+    "lj-tuning",
+    "lj-tuning-raw16",
+    "synthetic-polynomial",
+    "synthetic-recurrence",
+    "synthetic-trigonometric"
+  ],
+  "k": {
+    "bytes": 1024,
+    "status": "proposed"
+  },
+  "schema": 1,
+  "scope": "corpus",
+  "unresolved": [
+    {
+      "field": "calgary-book1.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-book1.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-book2.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-book2.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-obj1.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-obj1.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-obj2.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-obj2.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-paper1.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-paper1.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-paper2.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "calgary-paper2.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-alice29.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-alice29.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-cp.html.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-cp.html.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-lcet10.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-lcet10.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-plrabn12.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-plrabn12.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-sum.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-sum.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-xargs.1.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "canterbury-xargs.1.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-amd64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-amd64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-amd64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-busybox-static-amd64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-arm64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-arm64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-busybox-static-arm64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-busybox-static-arm64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-amd64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-amd64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-amd64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-ripgrep-amd64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-arm64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-arm64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-ripgrep-arm64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-ripgrep-arm64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-amd64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-amd64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-amd64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-tuning-amd64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-arm64.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-arm64.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "debian-tuning-arm64.licence",
+      "reason": "unresolved"
+    },
+    {
+      "field": "debian-tuning-arm64.member",
+      "reason": "empty"
+    },
+    {
+      "field": "debian_tuning.package",
+      "reason": "unnamed"
+    },
+    {
+      "field": "enwik8-zip.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "enwik8-zip.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "executable.eval.slice_length",
+      "reason": "absent"
+    },
+    {
+      "field": "executable.replacement_rule",
+      "reason": "absent"
+    },
+    {
+      "field": "flac-subset.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "flac-subset.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "flac-subset.members",
+      "reason": "absent"
+    },
+    {
+      "field": "k.status",
+      "reason": "proposed"
+    },
+    {
+      "field": "lj-evaluation-raw16.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-evaluation-raw16.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-evaluation-raw16.member",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-evaluation.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-evaluation.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-evaluation.member",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning-raw16.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning-raw16.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning-raw16.member",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "lj-tuning.member",
+      "reason": "empty"
+    },
+    {
+      "field": "lj.metadata_checked",
+      "reason": "false"
+    },
+    {
+      "field": "lj.prefixes",
+      "reason": "unconfirmed"
+    },
+    {
+      "field": "lj.seed",
+      "reason": "empty"
+    },
+    {
+      "field": "pcm.byte_budget.evaluation",
+      "reason": "absent"
+    },
+    {
+      "field": "pcm.byte_budget.tuning",
+      "reason": "absent"
+    },
+    {
+      "field": "pcm.replacement_rule",
+      "reason": "absent"
+    },
+    {
+      "field": "silesia-dickens.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-dickens.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-dickens.member_md5",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-dickens.offset",
+      "reason": "absent"
+    },
+    {
+      "field": "silesia-ooffice.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-ooffice.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-ooffice.member_md5",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-reymont.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-reymont.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-reymont.member_md5",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-reymont.offset",
+      "reason": "absent"
+    },
+    {
+      "field": "silesia-webster.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-webster.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-webster.member_md5",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-webster.offset",
+      "reason": "absent"
+    },
+    {
+      "field": "silesia-xml.archive_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-xml.derived_sha256",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-xml.member_md5",
+      "reason": "empty"
+    },
+    {
+      "field": "silesia-xml.offset",
+      "reason": "absent"
+    }
+  ],
+  "violations": []
+}

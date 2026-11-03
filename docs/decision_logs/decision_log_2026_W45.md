@@ -182,3 +182,81 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long: feat: compress and decompress a file (v0.0.17) plus body covering rename install, fixture-v1 compress, and format version 1
 
 **Notes:** Long is the default. The user invoked release-manager and ordered a push, which approves the release commit.
+
+## 2026-11-03 20:23 — bmad-code-review — Story 1.12 second review — zip Unix mode 0
+
+**Q:** A zip member with Unix mode 0 has no file-type attribute. The story says the mode must be a regular file. The fetch tool currently accepts mode 0 so archives that omit the attribute still extract. Symlink mode stays rejected. Which behavior should story 1.12 keep?
+
+**Options:**
+- Keep accepting mode 0. Treat it as an omitted attribute.
+- Accept mode 0 only when the zip was not written on Unix (create_system is not 3).
+- Reject mode 0 as not a regular file.
+
+**Choice:** Reject mode 0 as not a regular file.
+
+## 2026-11-03 20:27 — bmad-code-review — Story 1.12 — Silesia zip mode compatibility
+
+**Q:** Mode 0 is now rejected. The five Silesia evaluation rows come from silesia.zip. If that archive was written on Windows or DOS, every member has mode 0 and extract will fail. Should story 1.12 stay with the blanket reject, or apply the regular-file check only to Unix-created zips?
+
+**Options:**
+- Keep the blanket reject. Mode 0 is NotRegular for every zip.
+- Check S_IFREG and symlink mode only when create_system is 3. A DOS or Windows member with mode 0 still extracts.
+
+**Choice:** Enable compatibilty with all Mode n's
+
+## 2026-11-03 20:51 — bmad-code-review — Story 1.12 review complete — next step
+
+**Q:** What would you like to do next?
+
+**Options:**
+- Start the next story
+- Re-run code review
+- Done
+
+**Choice:** Re-run code review
+
+## 2026-11-03 20:54 — bmad-code-review — Story 1.12 re-review — diff over 3000 lines
+
+**Q:** The re-review target is the uncommitted story 1.12 code: 8 files, 3014 diff lines, full review against the story. That is just over the 3000-line guide. The decision log is not included. How should this pass run?
+
+**Options:**
+- Review the whole diff in one pass
+- Start with tools/fetch (corpus.py, fetch.py, test_fetch.py), then the manifest and the synthetic signals
+- Start with the manifest and gate report, then the fetch tool, then the synthetic signals
+
+**Choice:** Review the whole diff in one pass
+
+## 2026-11-03 23:05 — bmad-code-review — Story 1.12 re-review complete — next step
+
+**Q:** The re-review is complete. overlap_pairs now rejects an odd or tiny K even when a role list is empty. Story 1.12 stays done. What would you like to do next?
+
+**Options:**
+- Start the next story
+- Re-run code review
+- Done
+
+**Choice:** Done
+
+## 2026-11-03 23:08 — release-manager — v0.0.18 release cut
+
+**Q:** Which version bump should v0.0.18 use?
+
+**Options:**
+- Patch 0.0.17 to 0.0.18 (default)
+- Minor 0.0.17 to 0.1.0
+
+**Choice:** Patch 0.0.17 to 0.0.18 (default)
+
+**Notes:** User invoked release-manager and ordered a push. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.18. The CLI has no --version.
+
+## 2026-11-03 23:08 — release-manager — Commit message for v0.0.18
+
+**Q:** Which commit message should the v0.0.18 release use?
+
+**Options:**
+- Short: feat: fetch the corpus manifest (v0.0.18)
+- Long: feat: fetch the corpus manifest (v0.0.18) plus body covering the unready corpus gate, synthetic signals, and unchanged format version
+
+**Choice:** Long: feat: fetch the corpus manifest (v0.0.18) plus body covering the unready corpus gate, synthetic signals, and unchanged format version
+
+**Notes:** Long is the release-manager default.

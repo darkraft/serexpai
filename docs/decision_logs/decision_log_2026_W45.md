@@ -135,3 +135,50 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long: feat: search a regenerable formula codebook (v0.0.16) plus body covering formula framing, fixture search, the baseline tie, and format version 1
 
 **Notes:** Long is the release-manager default. User did not ask for Short.
+
+## 2026-11-03 15:57 — bmad-code-review — Story 1.11 review — aarch64 evidence before patches
+
+**Q:** aarch64 CI has not run. Waive it and apply the eight review patches, or stop until the cross toolchain is installed?
+
+**Options:**
+- Waive aarch64, apply the eight patches, and leave the aarch64 acceptance unchecked
+- Stop until gcc-aarch64-linux-gnu and qemu-user are installed
+
+**Choice:** Installed gcc-aarch64-linux-gnu and qemu-user, then ran QEMU_LD_PREFIX=/usr/aarch64-linux-gnu ./ci.sh aarch64-unknown-linux-gnu. That pre-patch run passed. Apply the eight patches and re-run both targets.
+
+**Notes:** The loader is at /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1, so qemu needs QEMU_LD_PREFIX. Do not mark the story done on the pre-patch pass.
+
+## 2026-11-03 16:20 — bmad-code-review — Story 1.11 review complete
+
+**Q:** What would you like to do next?
+
+**Options:**
+- Start the next story — run dev-story for the next ready-for-dev story
+- Re-run code review
+- Done — end the workflow
+
+**Choice:** Done — end the workflow
+
+## 2026-11-03 16:16 — release-manager — Version bump for the file-command release
+
+**Q:** Which version bump should v0.0.17 use?
+
+**Options:**
+- Patch 0.0.16 to 0.0.17 (default)
+- Minor 0.0.16 to 0.1.0
+
+**Choice:** Patch 0.0.16 to 0.0.17 (default)
+
+**Notes:** User invoked release-manager and ordered a push. compress and decompress land. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.17. The CLI has no --version.
+
+## 2026-11-03 16:16 — release-manager — Commit message for v0.0.17
+
+**Q:** Which commit message should the v0.0.17 release use?
+
+**Options:**
+- Short: feat: compress and decompress a file (v0.0.17)
+- Long: feat: compress and decompress a file (v0.0.17) plus body covering rename install, fixture-v1 compress, and format version 1
+
+**Choice:** Long: feat: compress and decompress a file (v0.0.17) plus body covering rename install, fixture-v1 compress, and format version 1
+
+**Notes:** Long is the default. The user invoked release-manager and ordered a push, which approves the release commit.

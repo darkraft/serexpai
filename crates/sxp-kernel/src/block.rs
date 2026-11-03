@@ -18,7 +18,6 @@ use std::io::{ErrorKind, Read, Write};
 use crate::crc32::Crc32;
 use crate::error::Error;
 use crate::formula_wire;
-use crate::header::decode_header;
 use crate::leb128::{LENGTH_LIMIT, encode_leb128};
 use crate::model::{ModelConfig, Order0Model};
 use crate::polynomial::Polynomial;
@@ -648,31 +647,8 @@ fn read_following(
 }
 
 fn read_stream_header(input: &mut impl Read) -> Result<crate::header::Header, Error> {
-    let mut buf = [0u8; 7];
-    let mut len = 0usize;
-    loop {
-        let prefix = buf.get(..len).ok_or(Error::Leb128Overflow)?;
-        match decode_header(prefix) {
-            Ok((header, used)) if used == len => return Ok(header),
-            Ok(_) => return Err(Error::Leb128Overflow),
-            Err(Error::TruncatedHeader) | Err(Error::TruncatedLeb128) if len < 7 => {}
-            Err(err) => return Err(err),
-        }
-        match read_byte(input)? {
-            None => {
-                let prefix = buf.get(..len).ok_or(Error::Leb128Overflow)?;
-                return match decode_header(prefix) {
-                    Err(err) => Err(err),
-                    Ok(_) => Err(Error::TruncatedHeader),
-                };
-            }
-            Some(byte) => {
-                let slot = buf.get_mut(len).ok_or(Error::Leb128Overflow)?;
-                *slot = byte;
-                len = len.checked_add(1).ok_or(Error::Leb128Overflow)?;
-            }
-        }
-    }
+    let (_buf, _len, header) = crate::raw::read_header_prefix(input)?;
+    Ok(header)
 }
 
 fn read_byte(input: &mut impl Read) -> Result<Option<u8>, Error> {

@@ -9,7 +9,7 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::io::{self, Read};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use sxp_kernel::{Crc32, encode_whole_file_raw_header, read_whole_file_raw};
+use sxp_kernel::{Crc32, encode_whole_file_raw_header, read_file, read_whole_file_raw};
 
 struct Counting;
 
@@ -115,7 +115,7 @@ impl Read for Stream {
     }
 }
 
-fn measure(n: u64) -> usize {
+fn measure_with(n: u64, via_file: bool) -> usize {
     let header = encode_whole_file_raw_header(n).unwrap();
     let header_len = usize::from(header.len);
     let crc = crc_zeros(n).to_le_bytes();
@@ -130,15 +130,24 @@ fn measure(n: u64) -> usize {
     let base = CURRENT.load(Ordering::Relaxed);
     PEAK.store(base, Ordering::Relaxed);
     let mut sink = io::sink();
-    read_whole_file_raw(&mut stream, &mut sink).unwrap();
+    if via_file {
+        read_file(&mut stream, &mut sink).unwrap();
+    } else {
+        read_whole_file_raw(&mut stream, &mut sink).unwrap();
+    }
     PEAK.load(Ordering::Relaxed).saturating_sub(base)
 }
 
 #[test]
 fn decoder_heap_does_not_grow_with_n() {
-    let small = measure(0);
-    let large = measure(1_048_576);
-    assert!(small <= 65_536, "N=0 peak {small}");
-    assert!(large <= 65_536, "N=1MiB peak {large}");
-    assert!(large <= small, "peak grew from {small} to {large}");
+    for via_file in [false, true] {
+        let small = measure_with(0, via_file);
+        let large = measure_with(1_048_576, via_file);
+        assert!(small <= 65_536, "N=0 peak {small} file={via_file}");
+        assert!(large <= 65_536, "N=1MiB peak {large} file={via_file}");
+        assert!(
+            large <= small,
+            "peak grew from {small} to {large} file={via_file}"
+        );
+    }
 }

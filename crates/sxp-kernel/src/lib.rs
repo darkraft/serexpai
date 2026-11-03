@@ -1,4 +1,4 @@
-//! Normative kernel. Whole-file raw framing, the polynomial, trigonometric, and recurrence evaluators, the binary range coder, and the order-0 probability model.
+//! Normative kernel. Whole-file raw framing, baseline Block framing, the polynomial, trigonometric, and recurrence evaluators, the binary range coder, and the order-0 probability model.
 //!
 //! G0 is bitstream-spec-seed.md SHA-256
 //! `f4bea1e5b729db1df957563fd3e8e5bec70c0ab0a382f0f0afc7f9e82196e12e`.
@@ -13,6 +13,7 @@
     clippy::unreachable
 )]
 
+mod block;
 mod crc32;
 mod error;
 mod header;
@@ -25,6 +26,10 @@ mod recurrence;
 mod residual;
 mod trigonometric;
 
+pub use block::{
+    BLOCK_WINDOW, BlockKind, BlockPlan, BlockView, MAX_ENCODED_BLOCK, NominalLength, actual_len,
+    decode_block, encode_block, is_canonical, read_blocked_file, write_blocked_file,
+};
 pub use crc32::{Crc32, crc32_iso_hdlc};
 pub use error::Error;
 pub use header::{Header, HeaderBytes, decode_header, encode_whole_file_raw_header};

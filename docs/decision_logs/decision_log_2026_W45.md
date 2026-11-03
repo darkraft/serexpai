@@ -50,3 +50,27 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long (default)
 
 **Notes:** User invoked release-manager and did not ask for Short.
+
+## 2026-11-03 10:16 — release-manager — Version bump for the baseline-block release
+
+**Q:** Which version bump should this release use?
+
+**Options:**
+- Patch 0.0.13 to 0.0.14 (default)
+- Minor 0.0.13 to 0.1.0
+
+**Choice:** Patch 0.0.13 to 0.0.14 (default)
+
+**Notes:** User did not ask for a minor bump. Blocked mode is implemented for four baseline kinds. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.14. The CLI has no --version.
+
+## 2026-11-03 10:16 — release-manager — Commit message for v0.0.14
+
+**Q:** Which commit message should this release use?
+
+**Options:**
+- Short: feat: round-trip one baseline block (v0.0.14)
+- Long: feat: round-trip one baseline block (v0.0.14) plus body covering the 5-bit header, per-block model reset, and format version 1
+
+**Choice:** Long: feat: round-trip one baseline block (v0.0.14) plus body covering the 5-bit header, per-block model reset, and format version 1
+
+**Notes:** Default long message. User ordered the release and a push.

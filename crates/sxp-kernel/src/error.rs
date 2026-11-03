@@ -24,6 +24,15 @@ pub enum Error {
     TruncatedCoder,
     SaturatedRangeCode,
     NonzeroRangeCode,
+    ReservedLength,
+    ReservedKind,
+    UnsupportedKind,
+    NonCanonicalLength,
+    NonZeroPadding,
+    TruncatedBlock,
+    BlockLengthMismatch,
+    BlockTooLarge,
+    UnexpectedMode,
     Io(ErrorKind),
 }
 
@@ -50,6 +59,15 @@ impl Error {
             Error::TruncatedCoder => "TruncatedCoder",
             Error::SaturatedRangeCode => "SaturatedRangeCode",
             Error::NonzeroRangeCode => "NonzeroRangeCode",
+            Error::ReservedLength => "ReservedLength",
+            Error::ReservedKind => "ReservedKind",
+            Error::UnsupportedKind => "UnsupportedKind",
+            Error::NonCanonicalLength => "NonCanonicalLength",
+            Error::NonZeroPadding => "NonZeroPadding",
+            Error::TruncatedBlock => "TruncatedBlock",
+            Error::BlockLengthMismatch => "BlockLengthMismatch",
+            Error::BlockTooLarge => "BlockTooLarge",
+            Error::UnexpectedMode => "UnexpectedMode",
             Error::Io(_) => "Io",
         }
     }

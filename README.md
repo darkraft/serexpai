@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.13**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, and adapts an order-0 probability model. The command-line tool compiles and does not compress or decompress yet.
+Version **0.0.14**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips one baseline Block in blocked mode. The command-line tool compiles and does not compress or decompress yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -44,10 +44,13 @@ recurrence formula. The trigonometric evaluator uses the committed 1025-entry
 sine table. It codes binary decisions with the range coder and reports the
 exact byte length. It also adapts one order-0 model: 255 nodes, eight decisions
 per byte, and a provisional strawman (`p = 32768`, count cap 24) that D-07 has
-not frozen. None of those results is written into a file yet. The rest of
-format v1 is still design: per-block headers, formula parameters, and a
-range-coder payload inside a Block. Those documents are listed below. This
-release does not change the bitstream layout.
+not frozen.
+
+Blocked mode writes those results into a file for four baseline kinds: Raw,
+Direct, Previous-byte, and Constant. A Block starts with a 5-bit header, then
+checked zero padding, then either the raw bytes or one self-contained coder
+payload. Format version stays 1. Formula parameters are still not written.
+The kind numbers are the spec seed's proposed table.
 
 ## Documents
 
@@ -72,10 +75,11 @@ The Cargo workspace exists: `sxp-kernel`, `sxp-encoder`, `sxp-bench`, and
 `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`. Whole-file raw
 round-trips, a predicted byte reconstructs exactly, polynomial, trigonometric,
 and recurrence formulas produce the same prediction bytes on both targets, the
-binary range coder round-trips fixed decision schedules on both targets, and
+binary range coder round-trips fixed decision schedules on both targets,
 the order-0 model reproduces the pinned RECIP and 256-symbol hashes on both
-targets. Block framing, the encoder, the benchmark, and the three commands
-above are still absent.
+targets, and a blocked file of Raw, Direct, Previous-byte, and Constant Blocks
+round-trips on both targets. Formula Blocks, the encoder, the benchmark, and
+the three commands above are still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

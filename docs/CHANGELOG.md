@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.17] - 2026-11-03
+
+### Added
+
+- `sxp-cli compress <src> <dst>` and `sxp-cli decompress <src> <dst>`. Compress writes `encode_codebook` for the labelled `fixture-v1` codebook, all baselines, header pruning, and no thread pool. Decompress calls `sxp_kernel::read_file` and does not load a codebook. Success exits 0 with empty stdout and stderr. `--help` and `-h` exit 0. Every other failure exits 1 with one stderr line. There is no `--version`, `--recipe`, `--threads`, or `--force`, and no stdin or stdout data path.
+- Atomic install. The command writes a temp file in the destination parent, validates it, flushes, syncs, and renames it onto the destination. A failure removes only that temp file. An existing destination stays byte-identical. The same directory entry, a directory source, a missing parent, and a destination with no file name are refused before the temp file exists.
+- `sxp_kernel::read_file`. It reads the shared 7-byte header and dispatches to the existing whole-file or blocked reader. A declared length at or above `2^35` is `Leb128Overflow`. Compress refuses a source whose followed metadata length is at or above that limit and does not read it.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** Format version stays 1. The CLI emits streams the 0.0.16 decoder already accepts. Kind 7 and length code 3 stay reserved. The production codebook recipe (D-09) and the model constants (D-07) stay open. The benchmark command is still absent.
+- `README.md` records version 0.0.17 and the two file commands. The workspace manifest is 0.0.17. The binary has no `--version` flag.
+
 ## [0.0.16] - 2026-11-03
 
 ### Added

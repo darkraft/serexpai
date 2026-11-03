@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.16**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. The command-line tool compiles and does not compress or decompress yet.
+Version **0.0.17**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. `sxp-cli compress` writes that search, and `sxp-cli decompress` restores the file.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -21,17 +21,17 @@ reproducible negative result. An unreproducible result is the outcome to avoid.
 v1 is not a production compressor. It has no throughput target and promises no
 bitstream compatibility between 0.x versions.
 
-## Planned commands
+## Commands
 
-Once the CLI exists:
+`sxp-cli compress <src> <dst>` writes a bitstream. It searches the labelled
+fixture codebook with header pruning and no thread pool. `sxp-cli decompress
+<src> <dst>` restores the original bytes through the kernel. Success replaces
+the destination by renaming a temp file in the same directory. A failure leaves
+an existing destination unchanged. `--help` and `-h` print usage and exit 0.
+There is no `--version`, `--recipe`, `--threads`, or `--force`. The benchmark
+command is still absent.
 
-- `sxpc` writes a bitstream file from an input file.
-- `sxpd` restores the original bytes.
-- `sxpb` reports total encoded size per input class, for SerExpAI and for the
-  baselines (constant prediction, previous-byte prediction, direct entropy coding),
-  and checks that every round-trip is byte-identical.
-
-Arguments are files. There is no standard-input or standard-output streaming in v1.
+Arguments are files. There is no standard-input or standard-output data path.
 
 ## What a bitstream contains
 
@@ -82,8 +82,9 @@ the order-0 model reproduces the pinned RECIP and 256-symbol hashes on both
 targets, and a blocked file of baseline or formula Blocks round-trips on both
 targets. The encoder selects among the baselines by exact encoded size,
 partitions the input, lets whole-file raw win a tie, and searches the labelled
-fixture codebook the same way. The production recipe, the benchmark, and the
-three commands above are still absent.
+fixture codebook the same way. `sxp-cli compress` and `sxp-cli decompress`
+round-trip a file on both targets. The production recipe and the benchmark
+are still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

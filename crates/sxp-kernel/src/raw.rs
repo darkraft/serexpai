@@ -37,12 +37,24 @@ fn write_all<W: Write>(output: &mut W, mut bytes: &[u8]) -> Result<(), Error> {
 }
 
 fn read_header<R: Read>(input: &mut R) -> Result<Header, Error> {
+    let (_buf, _len, header) = read_header_prefix(input)?;
+    Ok(header)
+}
+
+/// Bytes consumed for a complete header, and that header.
+///
+/// `used != len` is [`Error::Leb128Overflow`]. Only [`Error::TruncatedHeader`]
+/// and [`Error::TruncatedLeb128`] pull another byte, and only while fewer than
+/// 7 bytes are buffered.
+pub(crate) fn read_header_prefix<R: Read>(
+    input: &mut R,
+) -> Result<([u8; 7], usize, Header), Error> {
     let mut buf = [0u8; 7];
     let mut len = 0usize;
     loop {
         let prefix = buf.get(..len).ok_or(Error::Leb128Overflow)?;
         match decode_header(prefix) {
-            Ok((header, used)) if used == len => return Ok(header),
+            Ok((header, used)) if used == len => return Ok((buf, len, header)),
             Ok(_) => return Err(Error::Leb128Overflow),
             Err(Error::TruncatedHeader) | Err(Error::TruncatedLeb128) if len < 7 => {}
             Err(err) => return Err(err),

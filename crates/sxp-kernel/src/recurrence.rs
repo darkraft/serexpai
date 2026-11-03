@@ -150,4 +150,77 @@ impl Recurrence {
     pub fn predict(&self, n: u16) -> Result<u8, Error> {
         Ok(self.value(n)?.rem_euclid(256) as u8)
     }
+
+    /// One forward pass. `out[i] == predict(i)` for every `i < len`.
+    ///
+    /// `len == 0` is empty. `len > 2048` is rejected. Each call restarts at
+    /// `s0` and `s1`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidParameter`] when `len > 2048`.
+    pub fn predict_span(&self, len: u16) -> Result<Vec<u8>, Error> {
+        if len > 2048 {
+            return Err(Error::InvalidParameter);
+        }
+        let modulus = i64::from(self.m_mod);
+        let mut out = Vec::with_capacity(usize::from(len));
+        match self.order {
+            1 => {
+                let a = self.coefficient(0)?;
+                let b = self.coefficient(1)?;
+                let mut x = self.initial(0)?;
+                for n in 0..len {
+                    if n > 0 {
+                        x = (a * x + b).rem_euclid(modulus);
+                    }
+                    out.push(x.rem_euclid(256) as u8);
+                }
+            }
+            2 => {
+                let a = self.coefficient(0)?;
+                let b = self.coefficient(1)?;
+                let c = self.coefficient(2)?;
+                let mut prev = self.initial(0)?;
+                let mut curr = self.initial(1)?;
+                for n in 0..len {
+                    let x = if n == 0 {
+                        prev
+                    } else if n == 1 {
+                        curr
+                    } else {
+                        let next = (a * curr + b * prev + c).rem_euclid(modulus);
+                        prev = curr;
+                        curr = next;
+                        curr
+                    };
+                    out.push(x.rem_euclid(256) as u8);
+                }
+            }
+            _ => return Err(Error::InvalidParameter),
+        }
+        Ok(out)
+    }
+
+    pub(crate) fn order(&self) -> u8 {
+        self.order
+    }
+
+    pub(crate) fn modulus(&self) -> u32 {
+        self.m_mod
+    }
+
+    /// `a`, `b`, and `c` when order is 2. The unused tail is omitted.
+    pub(crate) fn live_coefficients(&self) -> Result<&[i32], Error> {
+        let count = usize::from(self.order).saturating_add(1);
+        self.coefficients
+            .get(..count)
+            .ok_or(Error::InvalidParameter)
+    }
+
+    /// `s0`, and `s1` when order is 2.
+    pub(crate) fn live_state(&self) -> Result<&[u32], Error> {
+        let count = usize::from(self.order);
+        self.state.get(..count).ok_or(Error::InvalidParameter)
+    }
 }

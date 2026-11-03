@@ -202,20 +202,14 @@ fn rejections_follow_the_check_order() {
     );
     assert_eq!(
         decode_block(&row("kind-polynomial"), 1).unwrap_err(),
-        Error::UnsupportedKind
+        Error::TruncatedBlock
     );
     assert_eq!(
         decode_block(&row("kind-polynomial-noncanonical-length"), 1).unwrap_err(),
-        Error::UnsupportedKind
+        Error::TruncatedBlock
     );
-    assert_eq!(
-        decode_block(&[0x14], 1).unwrap_err(),
-        Error::UnsupportedKind
-    );
-    assert_eq!(
-        decode_block(&[0x18], 1).unwrap_err(),
-        Error::UnsupportedKind
-    );
+    assert_eq!(decode_block(&[0x14], 1).unwrap_err(), Error::TruncatedBlock);
+    assert_eq!(decode_block(&[0x18], 1).unwrap_err(), Error::TruncatedBlock);
     assert_eq!(decode_block(&[0x40], 1).unwrap_err(), Error::NonZeroPadding);
     assert_eq!(decode_block(&[0x80], 1).unwrap_err(), Error::NonZeroPadding);
     assert_eq!(

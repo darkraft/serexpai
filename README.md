@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.15**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips one baseline Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size. The command-line tool compiles and does not compress or decompress yet.
+Version **0.0.16**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. The command-line tool compiles and does not compress or decompress yet.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -46,11 +46,13 @@ exact byte length. It also adapts one order-0 model: 255 nodes, eight decisions
 per byte, and a provisional strawman (`p = 32768`, count cap 24) that D-07 has
 not frozen.
 
-Blocked mode writes those results into a file for four baseline kinds: Raw,
-Direct, Previous-byte, and Constant. A Block starts with a 5-bit header, then
-checked zero padding, then either the raw bytes or one self-contained coder
-payload. Format version stays 1. Formula parameters are still not written.
-The kind numbers are the spec seed's proposed table.
+Blocked mode writes those results into a file. Baseline kinds are Raw, Direct,
+Previous-byte, and Constant. Formula kinds are Polynomial, Trigonometric, and
+Recurrence: the section stores the parameters, and the payload is the
+range-coded residual. A Block starts with a 5-bit header, then checked zero
+padding, then the payload. Format version stays 1. Kind 7 and length code 3
+stay reserved. The production codebook recipe and the model constants are still
+open.
 
 ## Documents
 
@@ -77,10 +79,11 @@ round-trips, a predicted byte reconstructs exactly, polynomial, trigonometric,
 and recurrence formulas produce the same prediction bytes on both targets, the
 binary range coder round-trips fixed decision schedules on both targets,
 the order-0 model reproduces the pinned RECIP and 256-symbol hashes on both
-targets, and a blocked file of Raw, Direct, Previous-byte, and Constant Blocks
-round-trips on both targets. The encoder selects among those baselines by
-exact encoded size, partitions the input, and lets whole-file raw win a tie.
-Formula Blocks, the benchmark, and the three commands above are still absent.
+targets, and a blocked file of baseline or formula Blocks round-trips on both
+targets. The encoder selects among the baselines by exact encoded size,
+partitions the input, lets whole-file raw win a tie, and searches the labelled
+fixture codebook the same way. The production recipe, the benchmark, and the
+three commands above are still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

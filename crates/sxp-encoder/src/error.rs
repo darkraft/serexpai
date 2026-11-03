@@ -8,6 +8,10 @@ pub enum Error {
     NoCandidate,
     ThreadPool,
     MissingSpan,
+    AbsentRecipe,
+    UnresolvedProduction,
+    CapExceeded,
+    MissingFamily,
 }
 
 impl Error {
@@ -17,6 +21,10 @@ impl Error {
             Self::NoCandidate => "NoCandidate",
             Self::ThreadPool => "ThreadPool",
             Self::MissingSpan => "MissingSpan",
+            Self::AbsentRecipe => "AbsentRecipe",
+            Self::UnresolvedProduction => "UnresolvedProduction",
+            Self::CapExceeded => "CapExceeded",
+            Self::MissingFamily => "MissingFamily",
         }
     }
 }

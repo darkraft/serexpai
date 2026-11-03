@@ -2,8 +2,9 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sxp_encoder::{
-    Choice, Error, LengthPolicy, SearchMode, Selection, SpanTable, all_baselines, allowed_nominals,
-    candidate_id, check_length, choose_candidate, encode_baselines, reduce, select_baselines,
+    Choice, Error, LengthPolicy, SearchCandidate, SearchMode, Selection, SpanCost, SpanTable,
+    all_baselines, allowed_nominals, candidate_id, check_length, choose_candidate,
+    encode_baselines, reduce, select_baselines,
 };
 use sxp_kernel::{
     BlockKind, LENGTH_LIMIT, NominalLength, actual_len, encode_block, read_blocked_file,
@@ -20,6 +21,25 @@ fn hex(bytes: &[u8]) -> String {
 
 fn zeros(n: usize) -> Vec<u8> {
     vec![0u8; n]
+}
+
+fn as_search(kinds: &[BlockKind]) -> Vec<SearchCandidate> {
+    kinds
+        .iter()
+        .copied()
+        .map(|kind| SearchCandidate {
+            id: candidate_id(kind).expect("baseline"),
+            kind,
+        })
+        .collect()
+}
+
+fn raw_span(bytes: u64) -> SpanCost {
+    SpanCost {
+        id: 0,
+        bytes,
+        kind: BlockKind::Raw,
+    }
 }
 
 fn constants() -> Vec<BlockKind> {
@@ -155,12 +175,12 @@ fn allowed_nominals_match_the_tables() {
 
 #[test]
 fn candidate_ids_are_raw_then_baselines_then_constants() {
-    assert_eq!(candidate_id(BlockKind::Raw), 0);
-    assert_eq!(candidate_id(BlockKind::Direct), 1);
-    assert_eq!(candidate_id(BlockKind::PreviousByte), 2);
-    assert_eq!(candidate_id(BlockKind::Constant(0)), 3);
-    assert_eq!(candidate_id(BlockKind::Constant(1)), 4);
-    assert_eq!(candidate_id(BlockKind::Constant(255)), 258);
+    assert_eq!(candidate_id(BlockKind::Raw), Some(0));
+    assert_eq!(candidate_id(BlockKind::Direct), Some(1));
+    assert_eq!(candidate_id(BlockKind::PreviousByte), Some(2));
+    assert_eq!(candidate_id(BlockKind::Constant(0)), Some(3));
+    assert_eq!(candidate_id(BlockKind::Constant(1)), Some(4));
+    assert_eq!(candidate_id(BlockKind::Constant(255)), Some(258));
     assert_eq!(all_baselines().len(), 259);
 }
 
@@ -169,14 +189,22 @@ fn header_prune_skips_constants_only_when_the_incumbent_is_at_most_two() {
     let kinds = all_baselines();
     let reference_calls = Cell::new(0u32);
     let prune_calls = Cell::new(0u32);
-    let reference = choose_candidate(&kinds, SearchMode::Reference, |kind| {
+    let reference = choose_candidate(&as_search(&kinds), SearchMode::Reference, |candidate| {
         reference_calls.set(reference_calls.get() + 1);
-        Ok(if kind == BlockKind::Raw { 2 } else { 50 })
+        Ok(if candidate.kind == BlockKind::Raw {
+            2
+        } else {
+            50
+        })
     })
     .expect("reference");
-    let pruned = choose_candidate(&kinds, SearchMode::HeaderPrune, |kind| {
+    let pruned = choose_candidate(&as_search(&kinds), SearchMode::HeaderPrune, |candidate| {
         prune_calls.set(prune_calls.get() + 1);
-        Ok(if kind == BlockKind::Raw { 2 } else { 50 })
+        Ok(if candidate.kind == BlockKind::Raw {
+            2
+        } else {
+            50
+        })
     })
     .expect("prune");
     assert_eq!(reference_calls.get(), 259);
@@ -189,19 +217,27 @@ fn header_prune_skips_constants_only_when_the_incumbent_is_at_most_two() {
     let mut reversed = all_baselines();
     reversed.reverse();
     let reversed_calls = Cell::new(0u32);
-    let reversed_winner = choose_candidate(&reversed, SearchMode::HeaderPrune, |kind| {
-        reversed_calls.set(reversed_calls.get() + 1);
-        Ok(if kind == BlockKind::Raw { 2 } else { 50 })
-    })
+    let reversed_winner = choose_candidate(
+        &as_search(&reversed),
+        SearchMode::HeaderPrune,
+        |candidate| {
+            reversed_calls.set(reversed_calls.get() + 1);
+            Ok(if candidate.kind == BlockKind::Raw {
+                2
+            } else {
+                50
+            })
+        },
+    )
     .expect("reversed prune");
     assert_eq!(reversed_calls.get(), 3);
     assert_eq!(reversed_winner.1, 0);
     assert_eq!(reversed_winner.2, 2);
 
     let wide_calls = Cell::new(0u32);
-    let wide = choose_candidate(&kinds, SearchMode::HeaderPrune, |kind| {
+    let wide = choose_candidate(&as_search(&kinds), SearchMode::HeaderPrune, |candidate| {
         wide_calls.set(wide_calls.get() + 1);
-        Ok(match kind {
+        Ok(match candidate.kind {
             BlockKind::Raw => 5,
             BlockKind::Direct => 4,
             _ => 9,
@@ -362,9 +398,9 @@ fn call_order_does_not_change_the_eight_zero_file() {
 #[test]
 fn injected_ties_use_the_production_reducer() {
     let mut count_tie = SpanTable::new();
-    count_tie.insert((0, 1), (0, 10));
-    count_tie.insert((0, 0), (0, 5));
-    count_tie.insert((256, 0), (0, 5));
+    count_tie.insert((0, 1), raw_span(10));
+    count_tie.insert((0, 0), raw_span(5));
+    count_tie.insert((256, 0), raw_span(5));
     let key = reduce(512, LengthPolicy::All, &count_tie).expect("count");
     assert_eq!(key.block_bytes, 10);
     assert_eq!(key.block_count, 1);
@@ -372,12 +408,12 @@ fn injected_ties_use_the_production_reducer() {
 
     let mut lex_tie = SpanTable::new();
     for (offset, nominal) in every_span(1280, LengthPolicy::All) {
-        lex_tie.insert((offset, nominal.code()), (0, 100));
+        lex_tie.insert((offset, nominal.code()), raw_span(100));
     }
-    lex_tie.insert((0, 0), (0, 6));
-    lex_tie.insert((256, 1), (0, 6));
-    lex_tie.insert((0, 1), (0, 6));
-    lex_tie.insert((1024, 0), (0, 6));
+    lex_tie.insert((0, 0), raw_span(6));
+    lex_tie.insert((256, 1), raw_span(6));
+    lex_tie.insert((0, 1), raw_span(6));
+    lex_tie.insert((1024, 0), raw_span(6));
     let key = reduce(1280, LengthPolicy::All, &lex_tie).expect("lex");
     assert_eq!(key.block_bytes, 12);
     assert_eq!(key.block_count, 2);
@@ -597,7 +633,7 @@ fn brute_at(input: &[u8], offset: u64, memo: &mut BTreeMap<u64, Brute>) -> Brute
         for kind in all_baselines() {
             let encoded = encode_block(kind, nominal, remaining, slice).expect("block");
             let bytes = encoded.len() as u64;
-            let id = candidate_id(kind);
+            let id = candidate_id(kind).expect("baseline");
             let replace = match span {
                 None => true,
                 Some((best_bytes, best_id)) => (bytes, id) < (best_bytes, best_id),
@@ -655,7 +691,7 @@ fn same_span(input: &[u8], choices: &[Choice]) {
         for kind in all_baselines() {
             let encoded = encode_block(kind, choice.nominal, remaining, slice).expect("span");
             let len = encoded.len() as u64;
-            let id = candidate_id(kind);
+            let id = candidate_id(kind).expect("baseline");
             assert!(
                 len > choice.block_len || (len == choice.block_len && id >= choice.id),
                 "smaller candidate {id} at {offset}"

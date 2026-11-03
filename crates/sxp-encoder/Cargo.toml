@@ -9,3 +9,7 @@ rust-version.workspace = true
 [dependencies]
 sxp-kernel = { path = "../sxp-kernel" }
 rayon = "=1.12.0"
+sha2 = "=0.11.1"
+
+[dev-dependencies]
+sha2 = "=0.11.1"

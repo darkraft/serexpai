@@ -98,3 +98,40 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long: feat: select baselines by exact size (v0.0.15) plus body covering exact block size, the partition key, the whole-file raw tie, and format version 1
 
 **Notes:** User invoked release-manager and ordered a push. Long is the skill default.
+
+## 2026-11-03 13:35 — bmad-code-review — Story 1.10 review — how to handle patch findings
+
+**Q:** How should the seven patch findings be handled?
+
+**Options:**
+- Apply every patch
+- Leave as action items
+- Walk through each patch
+
+**Choice:** Apply every patch
+
+**Notes:** The opening request was CS, DS and CR 1.10 until everything is fixed.
+
+## 2026-11-03 13:56 — release-manager — Version bump for the story 1.10 working-tree release
+
+**Q:** Which version bump should v0.0.16 use?
+
+**Options:**
+- Patch 0.0.15 to 0.0.16 (default)
+- Minor 0.0.15 to 0.1.0
+
+**Choice:** Patch 0.0.15 to 0.0.16 (default)
+
+**Notes:** User invoked release-manager and ordered a push. Formula blocks and fixture codebook search land. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.16. The CLI has no --version.
+
+## 2026-11-03 13:56 — release-manager — Commit message for v0.0.16
+
+**Q:** Which commit message should the v0.0.16 release use?
+
+**Options:**
+- Short: feat: search a regenerable formula codebook (v0.0.16)
+- Long: feat: search a regenerable formula codebook (v0.0.16) plus body covering formula framing, fixture search, the baseline tie, and format version 1
+
+**Choice:** Long: feat: search a regenerable formula codebook (v0.0.16) plus body covering formula framing, fixture search, the baseline tie, and format version 1
+
+**Notes:** Long is the release-manager default. User did not ask for Short.

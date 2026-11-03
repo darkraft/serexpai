@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-11-03
+
+### Added
+
+- **Bitstream.** Blocked mode is implemented in `sxp-kernel` for the four baseline kinds. A Block is a 5-bit header (2-bit length code, then 3-bit kind, least significant bit first), kind-specific fields, checked zero padding to the next byte, then a byte-aligned payload. Length codes are 256, 1024, and 2048. Kinds are Raw, Direct, Previous-byte, and Constant. The Constant byte follows the header immediately and straddles the two section bytes. Actual length is `min(nominal, remaining)`. A nominal length is canonical when it is at most the bytes left, or, when at most 2048 bytes are left, when it is the smallest nominal that covers them. Raw copies bytes. Direct, Previous-byte, and Constant each start a new strawman order-0 model and a new range coder. Previous-byte predicts 0, then the previous byte in the Block. Constant predicts its signalled byte. `write_blocked_file` and `read_blocked_file` round-trip a mode-0 file. Mode 0 with `N = 0` stays rejected. Header, padding, and two raw-file fixtures are `spec/vectors/block-baseline-headers.hex`, `spec/vectors/block-raw-n1.bin`, and `spec/vectors/block-raw-n2.bin`.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- Format version stays 1. Whole-file raw is unchanged, and `read_whole_file_raw` still rejects mode 0. Wire kinds 4, 5, and 6 are rejected as unsupported. Kind 7 and length code 3 are reserved. Formula parameters are still not written. The kind numbers remain the spec seed's proposed table.
+- `README.md` records version 0.0.14. The kernel frames a baseline Block. The CLI still has no commands.
+
 ## [0.0.13] - 2026-11-02
 
 ### Added

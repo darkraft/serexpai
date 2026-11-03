@@ -438,7 +438,7 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "sxp-bench"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
  "serde",
  "serde_json",
@@ -450,7 +450,7 @@ dependencies = [
 
 [[package]]
 name = "sxp-cli"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
  "clap",
  "sxp-bench",
@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "sxp-encoder"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
  "rayon",
  "sha2",
@@ -469,7 +469,7 @@ dependencies = [
 
 [[package]]
 name = "sxp-kernel"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
  "proptest",
  "sha2",

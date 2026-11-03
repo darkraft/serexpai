@@ -5,6 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.18] - 2026-11-03
+
+### Added
+
+- `tools/fetch`, a Python standard-library tool. `extract` and `pin` check a local archive before reading a member. `transform pcm16le-to-u8` and `transform slice` write derived bytes. `select-pcm` orders clips by `SHA-256(seed || id)` and stops at the budget. `overlap` reports a shared run of at least K. `gate` prints the corpus report. A typed error exits 1 with the code as the first stderr token. The tool does not download anything. `ci.sh` does not call it.
+- `corpora/manifest.toml` and `corpora/gate-report.json`. The roster is the Canterbury, Calgary, Silesia, LJ Speech, Debian, enwik8, FLAC, and synthetic rows. `corpus_gate_ready` is false. K, the LJ seed, the LJ metadata check, the LJ prefixes, both PCM budgets, the Debian tuning package, and the PCM and executable replacement rules stay unresolved.
+- Three 4096-byte synthetic signals in `sxp-bench`. Each one calls a kernel evaluator twice over `n` in `0..2048`. The Rust test checks the parameter tuples and the SHA-256 literals against the manifest. `counts_toward_sm1` is false for all three.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** Format version stays 1. Kind 7 and length code 3 stay reserved. The production codebook recipe (D-09) and the model constants (D-07) stay open. The benchmark command is still absent.
+- `README.md` records version 0.0.18, the fetch tool, and the unready corpus gate. The workspace manifest is 0.0.18. The binary has no `--version` flag.
+- A zip member of any mode is accepted, including mode 0. A symlink is `UnsafeLink`. A directory is `NotRegular`.
+
 ## [0.0.17] - 2026-11-03
 
 ### Added

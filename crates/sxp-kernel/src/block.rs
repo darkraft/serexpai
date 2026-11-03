@@ -1,32 +1,37 @@
-//! Baseline Block framing. Spec seed §3, §4.4, and §4.5.
+//! Block framing. Spec seed §3, §4.4, and §4.5.
 //!
 //! Kind numbers are the seed §3.1 table. That table is still tagged proposed.
 //! Story 1.8 uses it as published and does not retag the seed.
 //!
-//! Wire payload of one coded Block is at most [`MAX_ENCODED_BLOCK`] bytes.
-//! Before each decision `range >= 2^24` and `freq0` is in `1..=4095`, so the
-//! post-decision range is at least 4096. Renormalisation then shifts at most
-//! twice (`4096 << 16 = 2^28`). A carry flush emits bytes those shifts
-//! deferred, so emitted bytes are at most the `shift_low` count. A 2048-byte
-//! Block has 16384 decisions, plus 5 termination shifts, minus the dropped
-//! leading byte: `16384 * 2 + 5 - 1 = 32772` payload bytes. The section is at
-//! most 2 bytes, so the encoded Block is at most 32774 bytes.
+//! Wire payload of one coded Block is at most 32772 bytes. Before each
+//! decision `range >= 2^24` and `freq0` is in `1..=4095`, so the post-decision
+//! range is at least 4096. Renormalisation then shifts at most twice
+//! (`4096 << 16 = 2^28`). A carry flush emits bytes those shifts deferred, so
+//! emitted bytes are at most the `shift_low` count. A 2048-byte Block has
+//! 16384 decisions, plus 5 termination shifts, minus the dropped leading byte:
+//! `16384 * 2 + 5 - 1 = 32772` payload bytes. The largest formula section is
+//! the order-16 trigonometric section, 1008 bits, 126 bytes. The encoded Block
+//! is at most `126 + 32772 = 32898` bytes.
 
 use std::io::{ErrorKind, Read, Write};
 
 use crate::crc32::Crc32;
 use crate::error::Error;
+use crate::formula_wire;
 use crate::header::decode_header;
 use crate::leb128::{LENGTH_LIMIT, encode_leb128};
 use crate::model::{ModelConfig, Order0Model};
+use crate::polynomial::Polynomial;
 use crate::range_coder::{RangeDecoder, RangeEncoder};
+use crate::recurrence::Recurrence;
 use crate::residual::{direct_symbol, reconstruct, residual_symbol};
+use crate::trigonometric::Trigonometric;
 
 /// Encoded Block length the writer refuses to emit.
-pub const MAX_ENCODED_BLOCK: usize = 32_774;
+pub const MAX_ENCODED_BLOCK: usize = 32_898;
 
 /// Decoder read-ahead, 36 KiB. [`MAX_ENCODED_BLOCK`] plus a 4-byte trailer is
-/// 32778. This constant is that ceiling rounded up to 36 KiB.
+/// 32902. This constant is that ceiling rounded up to 36 KiB.
 pub const BLOCK_WINDOW: usize = 36_864;
 
 /// Nominal Block length. Code 3 is not representable.
@@ -66,24 +71,75 @@ impl NominalLength {
     }
 }
 
-/// One baseline Block. Formula variants belong to story 1.10.
+/// One Block. Formula variants carry the evaluator and the stored coefficient width.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BlockKind {
     Raw,
     Direct,
     PreviousByte,
     Constant(u8),
+    Polynomial { formula: Polynomial, cw: u8 },
+    Trigonometric { formula: Trigonometric, cw: u8 },
+    Recurrence { formula: Recurrence, cw: u8 },
 }
 
 impl BlockKind {
+    /// Polynomial kind. `cw` is the stored width, not a production choice.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidParameter`] when `cw` is outside 1..=32 or a live
+    /// coefficient does not fit in that signed width.
+    pub fn polynomial(formula: Polynomial, cw: u8) -> Result<Self, Error> {
+        check_width(cw, 32, formula.live_coefficients()?)?;
+        Ok(Self::Polynomial { formula, cw })
+    }
+
+    /// Trigonometric kind. `cw` is the stored width, at most 29.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidParameter`] when `cw` is outside 1..=29 or a live
+    /// coefficient does not fit in that signed width.
+    pub fn trigonometric(formula: Trigonometric, cw: u8) -> Result<Self, Error> {
+        check_width(cw, 29, formula.live_coefficients()?)?;
+        Ok(Self::Trigonometric { formula, cw })
+    }
+
+    /// Recurrence kind. `cw` is the stored width, at most 25.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidParameter`] when `cw` is outside 1..=25 or a live
+    /// coefficient does not fit in that signed width.
+    pub fn recurrence(formula: Recurrence, cw: u8) -> Result<Self, Error> {
+        check_width(cw, 25, formula.live_coefficients()?)?;
+        Ok(Self::Recurrence { formula, cw })
+    }
+
     fn wire(self) -> u8 {
         match self {
             Self::Raw => 0,
             Self::Direct => 1,
             Self::PreviousByte => 2,
             Self::Constant(_) => 3,
+            Self::Polynomial { .. } => 4,
+            Self::Trigonometric { .. } => 5,
+            Self::Recurrence { .. } => 6,
         }
     }
+}
+
+fn check_width(cw: u8, max: u8, coefficients: &[i32]) -> Result<(), Error> {
+    if !(1..=max).contains(&cw) {
+        return Err(Error::InvalidParameter);
+    }
+    for coefficient in coefficients {
+        if !formula_wire::fits_signed(*coefficient, cw) {
+            return Err(Error::InvalidParameter);
+        }
+    }
+    Ok(())
 }
 
 /// One decoded Block. `consumed` counts section and payload bytes.
@@ -154,7 +210,16 @@ pub fn encode_block(
         return Err(Error::BlockLengthMismatch);
     }
     let mut out = Vec::new();
-    push_section(&mut out, nominal, kind)?;
+    match kind {
+        BlockKind::Raw | BlockKind::Direct | BlockKind::PreviousByte | BlockKind::Constant(_) => {
+            push_section(&mut out, nominal, kind)?;
+        }
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => {
+            formula_wire::append_section(&mut out, nominal.code(), kind)?;
+        }
+    }
     match kind {
         BlockKind::Raw => out.extend_from_slice(bytes),
         BlockKind::Direct => append_coded(&mut out, bytes.iter().copied().map(direct_symbol))?,
@@ -171,6 +236,12 @@ pub fn encode_block(
             &mut out,
             bytes.iter().copied().map(|y| residual_symbol(y, c)),
         )?,
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => {
+            let predictions = formula_wire::predictions(kind, actual)?;
+            append_predicted(&mut out, bytes, &predictions)?;
+        }
     }
     if out.len() > MAX_ENCODED_BLOCK {
         return Err(Error::BlockTooLarge);
@@ -187,11 +258,11 @@ pub fn encode_block(
 /// 1. missing first byte → [`Error::TruncatedBlock`]
 /// 2. length code 3 → [`Error::ReservedLength`]
 /// 3. kind 7 → [`Error::ReservedKind`]
-/// 4. kind 4, 5, or 6 → [`Error::UnsupportedKind`]
-/// 5. Constant missing its second byte → [`Error::TruncatedBlock`]
+/// 4. formula section short → [`Error::TruncatedBlock`]
+/// 5. formula field outside its domain → [`Error::InvalidParameter`]
 /// 6. padding bit set → [`Error::NonZeroPadding`]
 /// 7. nominal not canonical → [`Error::NonCanonicalLength`]
-/// 8. raw payload short → [`Error::TruncatedBlock`]
+/// 8. raw payload short, or a baseline section short → [`Error::TruncatedBlock`]
 /// 9. coder errors pass through
 pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
     let first = match input.first().copied() {
@@ -206,10 +277,27 @@ pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
     if kind_code == 7 {
         return Err(Error::ReservedKind);
     }
-    if kind_code >= 4 {
-        return Err(Error::UnsupportedKind);
-    }
     let nominal = NominalLength::from_wire(length_code).ok_or(Error::ReservedLength)?;
+    if kind_code >= 4 {
+        let (section_len, kind) = formula_wire::parse_formula(input)?;
+        if !is_canonical(nominal, remaining) {
+            return Err(Error::NonCanonicalLength);
+        }
+        let actual =
+            usize::try_from(actual_len(nominal, remaining)).map_err(|_| Error::TruncatedBlock)?;
+        let payload = input.get(section_len..).ok_or(Error::TruncatedBlock)?;
+        let predictions = formula_wire::predictions(kind, actual)?;
+        let (bytes, payload_used) = decode_predicted(payload, &predictions)?;
+        let consumed = section_len
+            .checked_add(payload_used)
+            .ok_or(Error::TruncatedBlock)?;
+        return Ok(BlockView {
+            kind,
+            nominal,
+            bytes,
+            consumed,
+        });
+    }
     let (section_len, kind) = parse_baseline(input, first, kind_code)?;
     if !is_canonical(nominal, remaining) {
         return Err(Error::NonCanonicalLength);
@@ -225,6 +313,9 @@ pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
         BlockKind::Direct => decode_coded(payload, actual, Prediction::Direct)?,
         BlockKind::PreviousByte => decode_coded(payload, actual, Prediction::Previous)?,
         BlockKind::Constant(c) => decode_coded(payload, actual, Prediction::Constant(c))?,
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => return Err(Error::InvalidParameter),
     };
     let consumed = section_len
         .checked_add(payload_used)
@@ -369,8 +460,38 @@ fn push_section(out: &mut Vec<u8>, nominal: NominalLength, kind: BlockKind) -> R
             out.push((c >> 3) & 0x1f);
         }
         BlockKind::Raw | BlockKind::Direct | BlockKind::PreviousByte => out.push(first),
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => return Err(Error::InvalidParameter),
     }
     Ok(())
+}
+
+fn append_predicted(out: &mut Vec<u8>, bytes: &[u8], predictions: &[u8]) -> Result<(), Error> {
+    if predictions.len() != bytes.len() {
+        return Err(Error::BlockLengthMismatch);
+    }
+    let mut symbols = Vec::with_capacity(bytes.len());
+    for (index, yhat) in predictions.iter().copied().enumerate() {
+        let y = bytes
+            .get(index)
+            .copied()
+            .ok_or(Error::BlockLengthMismatch)?;
+        symbols.push(residual_symbol(y, yhat));
+    }
+    append_coded(out, symbols.into_iter())
+}
+
+fn decode_predicted(payload: &[u8], predictions: &[u8]) -> Result<(Vec<u8>, usize), Error> {
+    let mut decoder = RangeDecoder::new(payload)?;
+    let mut model = Order0Model::new(ModelConfig::strawman()?);
+    let mut bytes = Vec::with_capacity(predictions.len());
+    for yhat in predictions {
+        let (symbol, _) = model.decode_symbol(&mut decoder)?;
+        bytes.push(reconstruct(*yhat, symbol));
+    }
+    decoder.finish()?;
+    Ok((bytes, decoder.bytes_consumed()))
 }
 
 fn append_coded(out: &mut Vec<u8>, symbols: impl Iterator<Item = u8>) -> Result<(), Error> {

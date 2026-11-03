@@ -96,4 +96,20 @@ impl Polynomial {
     pub fn predict(&self, n: u16) -> Result<u8, Error> {
         Ok(self.value(n)?.rem_euclid(256) as u8)
     }
+
+    pub(crate) fn degree(&self) -> u8 {
+        self.degree
+    }
+
+    pub(crate) fn q(&self) -> u8 {
+        self.q
+    }
+
+    /// Lowest power first, `degree + 1` coefficients. The unused tail is omitted.
+    pub(crate) fn live_coefficients(&self) -> Result<&[i32], Error> {
+        let count = usize::from(self.degree).saturating_add(1);
+        self.coefficients
+            .get(..count)
+            .ok_or(Error::InvalidParameter)
+    }
 }

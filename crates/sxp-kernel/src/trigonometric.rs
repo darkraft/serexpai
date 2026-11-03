@@ -111,6 +111,26 @@ impl Trigonometric {
     pub fn predict(&self, n: u16) -> Result<u8, Error> {
         Ok(self.value(n)?.rem_euclid(256) as u8)
     }
+
+    pub(crate) fn order(&self) -> u8 {
+        self.order
+    }
+
+    pub(crate) fn q(&self) -> u8 {
+        self.q
+    }
+
+    pub(crate) fn omega(&self) -> u32 {
+        self.omega
+    }
+
+    /// `c0`, then `a_k`, `b_k`. The unused tail is omitted.
+    pub(crate) fn live_coefficients(&self) -> Result<&[i32], Error> {
+        let count = usize::from(self.order).saturating_mul(2).saturating_add(1);
+        self.coefficients
+            .get(..count)
+            .ok_or(Error::InvalidParameter)
+    }
 }
 
 /// Accept only the committed 2050-byte sine table.

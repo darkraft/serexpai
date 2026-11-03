@@ -11,12 +11,16 @@
     clippy::unreachable
 )]
 
+mod codebook;
 mod error;
 mod select;
 
+pub use codebook::{
+    Codebook, assemble_codebook, canonical_bytes, check_family_caps, generate_codebook,
+};
 pub use error::Error;
 pub use select::{
-    Choice, LengthPolicy, PartitionKey, SearchMode, Selection, SpanTable, all_baselines,
-    allowed_nominals, candidate_id, check_length, choose_candidate, encode_baselines, reduce,
-    select_baselines,
+    Choice, CostCell, LengthPolicy, PartitionKey, SearchCandidate, SearchMode, Selection, SpanCost,
+    SpanTable, all_baselines, allowed_nominals, candidate_id, check_length, choose_candidate,
+    encode_baselines, encode_codebook, reduce, select_baselines, select_codebook, span_cells,
 };

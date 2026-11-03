@@ -16,6 +16,7 @@
 mod block;
 mod crc32;
 mod error;
+mod formula_wire;
 mod header;
 mod leb128;
 mod model;
@@ -32,6 +33,7 @@ pub use block::{
 };
 pub use crc32::{Crc32, crc32_iso_hdlc};
 pub use error::Error;
+pub use formula_wire::{formula_section, section_len};
 pub use header::{Header, HeaderBytes, decode_header, encode_whole_file_raw_header};
 pub use leb128::{LENGTH_LIMIT, Leb128, decode_leb128, encode_leb128};
 pub use model::{

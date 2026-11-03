@@ -55,8 +55,30 @@ pub struct Selection {
     pub file_len: u64,
 }
 
-/// `(offset, length code) → (candidate id, encoded Block bytes)`.
-pub type SpanTable = BTreeMap<(u64, u8), (u16, u64)>;
+/// One searched Block. Formula ids come from the codebook, not from [`candidate_id`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SearchCandidate {
+    pub id: u16,
+    pub kind: BlockKind,
+}
+
+/// One filled span. `reduce` reads `id` and `bytes`. `kind` is for the writer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SpanCost {
+    pub id: u16,
+    pub bytes: u64,
+    pub kind: BlockKind,
+}
+
+/// `(offset, length code) → winning candidate`.
+pub type SpanTable = BTreeMap<(u64, u8), SpanCost>;
+
+/// A cost the selector stored. `Skipped` is the sidecar sentinel `0xFFFF`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CostCell {
+    Evaluated(u64),
+    Skipped,
+}
 
 #[derive(Clone, Copy)]
 struct Node {
@@ -68,12 +90,16 @@ struct Node {
 }
 
 /// Raw = 0, Direct = 1, Previous-byte = 2, Constant `c` = `3 + c`.
-pub fn candidate_id(kind: BlockKind) -> u16 {
+/// A formula has no id of its own; the codebook assigns `259 + index`.
+pub fn candidate_id(kind: BlockKind) -> Option<u16> {
     match kind {
-        BlockKind::Raw => 0,
-        BlockKind::Direct => 1,
-        BlockKind::PreviousByte => 2,
-        BlockKind::Constant(byte) => 3u16.saturating_add(u16::from(byte)),
+        BlockKind::Raw => Some(0),
+        BlockKind::Direct => Some(1),
+        BlockKind::PreviousByte => Some(2),
+        BlockKind::Constant(byte) => Some(3u16.saturating_add(u16::from(byte))),
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => None,
     }
 }
 
@@ -150,11 +176,8 @@ fn canonical_nominal(remaining: u64) -> NominalLength {
     }
 }
 
-fn section_len(kind: BlockKind) -> u64 {
-    match kind {
-        BlockKind::Constant(_) => 2,
-        BlockKind::Raw | BlockKind::Direct | BlockKind::PreviousByte => 1,
-    }
+fn section_len(kind: BlockKind) -> Result<u64, Error> {
+    sxp_kernel::section_len(kind).map_err(Error::Kernel)
 }
 
 fn nominal_from_code(code: u8) -> Result<NominalLength, Error> {
@@ -192,44 +215,108 @@ fn slice_of(input: &[u8], offset: u64, len: u64) -> Result<&[u8], Error> {
         .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))
 }
 
-fn sorted_candidates(candidates: &[BlockKind]) -> Vec<BlockKind> {
+fn sorted_candidates(candidates: &[BlockKind]) -> Result<Vec<BlockKind>, Error> {
     let mut kinds = candidates.to_vec();
+    if kinds.iter().any(|kind| candidate_id(*kind).is_none()) {
+        return Err(Error::NoCandidate);
+    }
     kinds.sort_by_key(|kind| candidate_id(*kind));
     kinds.dedup_by_key(|kind| candidate_id(*kind));
-    kinds
+    Ok(kinds)
 }
 
 /// Pick the candidate with the smallest `(exact size, id)`.
 ///
-/// `HeaderPrune` walks ids in ascending order and skips a kind once its
+/// `HeaderPrune` walks ids in ascending order and skips a candidate once its
 /// section length is greater than or equal to the best exact size so far.
-/// The first kind is always costed. A cost error is returned as-is.
+/// The first candidate is always costed. A cost error is returned as-is.
 #[doc(hidden)]
 pub fn choose_candidate(
-    candidates: &[BlockKind],
+    candidates: &[SearchCandidate],
     mode: SearchMode,
-    cost: impl Fn(BlockKind) -> Result<u64, sxp_kernel::Error>,
+    cost: impl Fn(SearchCandidate) -> Result<u64, sxp_kernel::Error>,
 ) -> Result<(BlockKind, u16, u64), Error> {
-    let kinds = sorted_candidates(candidates);
+    let walked = walk_candidates(candidates, mode, cost)?;
+    walked.winner.ok_or(Error::NoCandidate)
+}
+
+/// One cell per candidate, in id order. Reference mode has no [`CostCell::Skipped`].
+///
+/// # Errors
+///
+/// A kernel cost error, including [`sxp_kernel::Error::BlockTooLarge`].
+#[doc(hidden)]
+pub fn span_cells(
+    bytes: &[u8],
+    nominal: NominalLength,
+    remaining: u64,
+    candidates: &[SearchCandidate],
+    mode: SearchMode,
+) -> Result<Vec<(u16, CostCell)>, Error> {
+    let walked = walk_candidates(candidates, mode, |candidate| {
+        encode_block(candidate.kind, nominal, remaining, bytes).and_then(|encoded| {
+            u64::try_from(encoded.len()).map_err(|_| sxp_kernel::Error::BlockTooLarge)
+        })
+    })?;
+    Ok(walked.cells)
+}
+
+struct Walk {
+    winner: Option<(BlockKind, u16, u64)>,
+    cells: Vec<(u16, CostCell)>,
+}
+
+fn walk_candidates(
+    candidates: &[SearchCandidate],
+    mode: SearchMode,
+    cost: impl Fn(SearchCandidate) -> Result<u64, sxp_kernel::Error>,
+) -> Result<Walk, Error> {
+    let ordered = sorted_search(candidates)?;
     let mut best: Option<(BlockKind, u16, u64)> = None;
-    for kind in kinds {
-        let id = candidate_id(kind);
+    let mut cells = Vec::with_capacity(ordered.len());
+    for candidate in ordered {
         if mode == SearchMode::HeaderPrune
             && let Some((_, _, incumbent)) = best
-            && section_len(kind) >= incumbent
+            && section_len(candidate.kind)? >= incumbent
         {
+            cells.push((candidate.id, CostCell::Skipped));
             continue;
         }
-        let bytes = cost(kind).map_err(Error::Kernel)?;
+        let bytes = cost(candidate).map_err(Error::Kernel)?;
+        cells.push((candidate.id, CostCell::Evaluated(bytes)));
         let replace = match best {
             None => true,
-            Some((_, best_id, best_bytes)) => (bytes, id) < (best_bytes, best_id),
+            Some((_, best_id, best_bytes)) => (bytes, candidate.id) < (best_bytes, best_id),
         };
         if replace {
-            best = Some((kind, id, bytes));
+            best = Some((candidate.kind, candidate.id, bytes));
         }
     }
-    best.ok_or(Error::NoCandidate)
+    Ok(Walk {
+        winner: best,
+        cells,
+    })
+}
+
+fn sorted_search(candidates: &[SearchCandidate]) -> Result<Vec<SearchCandidate>, Error> {
+    let mut ordered = candidates.to_vec();
+    ordered.sort_by_key(|candidate| candidate.id);
+    let mut cleaned: Vec<SearchCandidate> = Vec::with_capacity(ordered.len());
+    for candidate in ordered {
+        if let Some(previous) = cleaned.last()
+            && previous.id == candidate.id
+        {
+            if previous.kind != candidate.kind {
+                return Err(Error::NoCandidate);
+            }
+            continue;
+        }
+        cleaned.push(candidate);
+    }
+    if cleaned.is_empty() {
+        return Err(Error::NoCandidate);
+    }
+    Ok(cleaned)
 }
 
 fn spans_from(n: u64, policy: LengthPolicy) -> Result<Vec<(u64, NominalLength)>, Error> {
@@ -303,10 +390,12 @@ pub fn reduce(n: u64, policy: LengthPolicy, spans: &SpanTable) -> Result<Partiti
         let mut winner: Option<Node> = None;
         for nominal in allowed_nominals(remaining, policy) {
             let code = nominal.code();
-            let (id, edge_bytes) = spans
+            let span = spans
                 .get(&(offset, code))
                 .copied()
                 .ok_or(Error::MissingSpan)?;
+            let id = span.id;
+            let edge_bytes = span.bytes;
             let next = offset
                 .checked_add(actual_len(nominal, remaining))
                 .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
@@ -366,13 +455,22 @@ fn choices_from(key: &PartitionKey, spans: &SpanTable, n: u64) -> Result<Vec<Cho
     let mut choices = Vec::new();
     let mut offset = 0u64;
     for (code, id) in &key.steps {
-        let (table_id, block_len) = spans
+        let span = spans
             .get(&(offset, *code))
             .copied()
             .ok_or(Error::MissingSpan)?;
-        if table_id != *id {
+        if span.id != *id {
             return Err(Error::MissingSpan);
         }
+        let kind = if *id <= 258 {
+            let mapped = kind_from_id(*id)?;
+            if mapped != span.kind {
+                return Err(Error::NoCandidate);
+            }
+            mapped
+        } else {
+            span.kind
+        };
         let nominal = nominal_from_code(*code)?;
         let remaining = n
             .checked_sub(offset)
@@ -380,9 +478,9 @@ fn choices_from(key: &PartitionKey, spans: &SpanTable, n: u64) -> Result<Vec<Cho
         let actual = actual_len(nominal, remaining);
         choices.push(Choice {
             nominal,
-            kind: kind_from_id(*id)?,
+            kind,
             id: *id,
-            block_len,
+            block_len: span.bytes,
         });
         offset = offset
             .checked_add(actual)
@@ -408,25 +506,29 @@ fn cost_span(
     offset: u64,
     nominal: NominalLength,
     n: u64,
-    candidates: &[BlockKind],
+    candidates: &[SearchCandidate],
     mode: SearchMode,
-) -> Result<(u64, u8, u16, u64), Error> {
+) -> Result<SpanCost, Error> {
     let remaining = n
         .checked_sub(offset)
         .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
     let actual = actual_len(nominal, remaining);
     let bytes = slice_of(input, offset, actual)?;
-    let (_kind, id, len) = choose_candidate(candidates, mode, |kind| {
-        encode_block(kind, nominal, remaining, bytes).and_then(|encoded| {
+    let (kind, id, len) = choose_candidate(candidates, mode, |candidate| {
+        encode_block(candidate.kind, nominal, remaining, bytes).and_then(|encoded| {
             u64::try_from(encoded.len()).map_err(|_| sxp_kernel::Error::BlockTooLarge)
         })
     })?;
-    Ok((offset, nominal.code(), id, len))
+    Ok(SpanCost {
+        id,
+        bytes: len,
+        kind,
+    })
 }
 
 fn fill_table(
     input: &[u8],
-    candidates: &[BlockKind],
+    candidates: &[SearchCandidate],
     policy: LengthPolicy,
     mode: SearchMode,
     threads: usize,
@@ -436,7 +538,8 @@ fn fill_table(
     let rows = if threads <= 1 {
         let mut rows = Vec::with_capacity(spans.len());
         for (offset, nominal) in spans {
-            rows.push(cost_span(input, offset, nominal, n, candidates, mode)?);
+            let cost = cost_span(input, offset, nominal, n, candidates, mode)?;
+            rows.push((offset, nominal.code(), cost));
         }
         rows
     } else {
@@ -447,25 +550,53 @@ fn fill_table(
         pool.install(|| {
             spans
                 .par_iter()
-                .map(|(offset, nominal)| cost_span(input, *offset, *nominal, n, candidates, mode))
+                .map(|(offset, nominal)| {
+                    let cost = cost_span(input, *offset, *nominal, n, candidates, mode)?;
+                    Ok((*offset, nominal.code(), cost))
+                })
                 .collect::<Result<Vec<_>, Error>>()
         })?
     };
     let mut table = SpanTable::new();
-    for (offset, code, id, len) in rows {
-        table.insert((offset, code), (id, len));
+    for (offset, code, cost) in rows {
+        table.insert((offset, code), cost);
     }
     Ok(table)
 }
 
-/// Choose a baseline partition. `threads == 0` is one calling thread.
-///
-/// The span table is filled first. [`reduce`] then runs on the calling thread.
-/// Whole-file raw wins when there are no input bytes, or when the Blocks are
-/// not strictly smaller than `N`.
-pub fn select_baselines(
+fn baseline_candidates(kinds: &[BlockKind]) -> Result<Vec<SearchCandidate>, Error> {
+    let kinds = sorted_candidates(kinds)?;
+    let mut out = Vec::with_capacity(kinds.len());
+    for kind in kinds {
+        let id = candidate_id(kind).ok_or(Error::NoCandidate)?;
+        out.push(SearchCandidate { id, kind });
+    }
+    Ok(out)
+}
+
+fn codebook_candidates(
+    baselines: &[BlockKind],
+    formulas: &[BlockKind],
+) -> Result<Vec<SearchCandidate>, Error> {
+    let mut out = if baselines.is_empty() {
+        Vec::new()
+    } else {
+        baseline_candidates(baselines)?
+    };
+    for (index, kind) in formulas.iter().copied().enumerate() {
+        let offset = u16::try_from(index).map_err(|_| Error::NoCandidate)?;
+        let id = 259u16.checked_add(offset).ok_or(Error::NoCandidate)?;
+        out.push(SearchCandidate { id, kind });
+    }
+    if out.is_empty() {
+        return Err(Error::NoCandidate);
+    }
+    Ok(out)
+}
+
+fn select_candidates(
     input: &[u8],
-    candidates: &[BlockKind],
+    candidates: &[SearchCandidate],
     policy: LengthPolicy,
     mode: SearchMode,
     threads: usize,
@@ -485,11 +616,10 @@ pub fn select_baselines(
             file_len: 7,
         });
     }
-    let candidates = sorted_candidates(candidates);
     if candidates.is_empty() {
         return Err(Error::NoCandidate);
     }
-    let table = fill_table(input, &candidates, policy, mode, threads, n)?;
+    let table = fill_table(input, candidates, policy, mode, threads, n)?;
     let key = reduce(n, policy, &table)?;
     let choices = choices_from(&key, &table, n)?;
     let whole_file_raw = key.block_bytes >= n;
@@ -502,6 +632,54 @@ pub fn select_baselines(
     })
 }
 
+/// Choose a baseline partition. `threads == 0` is one calling thread.
+///
+/// For `N > 0`, a formula kind in `candidates` is [`Error::NoCandidate`].
+/// `N == 0` ignores the candidate list. The span table is filled first.
+/// [`reduce`] then runs on the calling thread. Whole-file raw
+/// wins when there are no input bytes, or when the Blocks are not strictly
+/// smaller than `N`.
+pub fn select_baselines(
+    input: &[u8],
+    candidates: &[BlockKind],
+    policy: LengthPolicy,
+    mode: SearchMode,
+    threads: usize,
+) -> Result<Selection, Error> {
+    let n = u64::try_from(input.len())
+        .map_err(|_| Error::Kernel(sxp_kernel::Error::LengthOutOfRange))?;
+    check_length(n)?;
+    if n == 0 {
+        return select_candidates(input, &[], policy, mode, threads);
+    }
+    let candidates = baseline_candidates(candidates)?;
+    select_candidates(input, &candidates, policy, mode, threads)
+}
+
+/// Search baselines and then codebook formulas. Formula ids are `259 + index`.
+pub fn select_codebook(
+    input: &[u8],
+    baselines: &[BlockKind],
+    codebook: &crate::Codebook,
+    policy: LengthPolicy,
+    mode: SearchMode,
+    threads: usize,
+) -> Result<Selection, Error> {
+    let n = u64::try_from(input.len())
+        .map_err(|_| Error::Kernel(sxp_kernel::Error::LengthOutOfRange))?;
+    check_length(n)?;
+    if n == 0 {
+        return select_candidates(input, &[], policy, mode, threads);
+    }
+    for kind in &codebook.formulas {
+        if candidate_id(*kind).is_some() {
+            return Err(Error::Kernel(sxp_kernel::Error::InvalidParameter));
+        }
+    }
+    let candidates = codebook_candidates(baselines, &codebook.formulas)?;
+    select_candidates(input, &candidates, policy, mode, threads)
+}
+
 /// Write the selection. Whole-file raw and blocked bytes both come from the kernel.
 pub fn encode_baselines(
     input: &[u8],
@@ -511,6 +689,23 @@ pub fn encode_baselines(
     threads: usize,
 ) -> Result<Vec<u8>, Error> {
     let selection = select_baselines(input, candidates, policy, mode, threads)?;
+    write_selection(input, &selection)
+}
+
+/// Write a codebook search. The Block kind is the one stored on [`Choice`].
+pub fn encode_codebook(
+    input: &[u8],
+    baselines: &[BlockKind],
+    codebook: &crate::Codebook,
+    policy: LengthPolicy,
+    mode: SearchMode,
+    threads: usize,
+) -> Result<Vec<u8>, Error> {
+    let selection = select_codebook(input, baselines, codebook, policy, mode, threads)?;
+    write_selection(input, &selection)
+}
+
+fn write_selection(input: &[u8], selection: &Selection) -> Result<Vec<u8>, Error> {
     let n = u64::try_from(input.len())
         .map_err(|_| Error::Kernel(sxp_kernel::Error::LengthOutOfRange))?;
     let mut output = Vec::new();

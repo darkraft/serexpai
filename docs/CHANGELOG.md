@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.16] - 2026-11-03
+
+### Added
+
+- Formula Blocks in `sxp-kernel`. Kinds 4, 5, and 6 store a polynomial, trigonometric, or recurrence section and a self-contained residual. The decoder rebuilds the formula from those bytes and does not read a codebook. A recurrence block is evaluated in one forward pass. Committed section bytes are `spec/vectors/formula-blocks.hex`.
+- Fixture codebook search in `sxp-encoder`. `generate_codebook("fixture-v1")` rebuilds three labelled formulas. Their canonical SHA-256 is `spec/vectors/codebook-fixture-v1.sha256`. Search appends them after the baselines, keeps the same partition key, and lets the smaller candidate id win a tie, so a baseline beats a formula of equal size. Header pruning skips a section that cannot beat the incumbent. One or two threads write the same bytes. `generate_codebook("production")` and `generate_codebook("benchmark")` stay unresolved.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream.** Kinds 4, 5, and 6 are decoded. They were rejected as unsupported in 0.0.14. Format version stays 1. Kind 7 and length code 3 stay reserved. The largest formula section raises the kernel's encoded-block cap to 32898 bytes. The production codebook recipe (D-09) and the model constants (D-07) stay open. The CLI still has no commands.
+- `README.md` records version 0.0.16. The kernel frames a formula Block. The encoder searches the fixture codebook.
+
+### Fixed
+
+- A formula section with an illegal coefficient and a non-zero padding bit returns `InvalidParameter`. The domain check runs before the padding check.
+
 ## [0.0.15] - 2026-11-03
 
 ### Added

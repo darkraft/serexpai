@@ -18,16 +18,77 @@ use std::io::{ErrorKind, Read, Write};
 use crate::crc32::Crc32;
 use crate::error::Error;
 use crate::formula_wire;
+use crate::header::encode_whole_file_raw_header;
 use crate::leb128::{LENGTH_LIMIT, encode_leb128};
-use crate::model::{ModelConfig, Order0Model};
+use crate::model::{DecisionTrace, ModelConfig, Order0Model};
 use crate::polynomial::Polynomial;
 use crate::range_coder::{RangeDecoder, RangeEncoder};
+use crate::raw::write_whole_file_raw;
 use crate::recurrence::Recurrence;
 use crate::residual::{direct_symbol, reconstruct, residual_symbol};
 use crate::trigonometric::Trigonometric;
 
 /// Encoded Block length the writer refuses to emit.
 pub const MAX_ENCODED_BLOCK: usize = 32_898;
+
+/// Eight components of one real bitstream. They sum to the file length.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ByteAccount {
+    pub file_header: u64,
+    pub block_headers: u64,
+    pub parameters: u64,
+    pub alignment_padding: u64,
+    pub raw_payload: u64,
+    pub coder_payload: u64,
+    pub coder_flush: u64,
+    pub crc: u64,
+}
+
+impl ByteAccount {
+    /// Sum of the eight components.
+    pub fn total(self) -> u64 {
+        self.file_header
+            .saturating_add(self.block_headers)
+            .saturating_add(self.parameters)
+            .saturating_add(self.alignment_padding)
+            .saturating_add(self.raw_payload)
+            .saturating_add(self.coder_payload)
+            .saturating_add(self.coder_flush)
+            .saturating_add(self.crc)
+    }
+
+    /// Whole-file raw: header, payload, and CRC. Every other field is 0.
+    pub fn whole_file_raw(header: u64, payload: u64) -> Self {
+        Self {
+            file_header: header,
+            raw_payload: payload,
+            crc: 4,
+            ..Self::default()
+        }
+    }
+}
+
+/// One encoded Block plus the lengths that belong to it.
+///
+/// The first section byte is a block header. Later section bytes are
+/// parameters. A padding-only section byte is not produced by the current
+/// writers, so `alignment_padding` stays on the file account.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EncodedBlock {
+    pub bytes: Vec<u8>,
+    pub section: u64,
+    pub raw_payload: u64,
+    pub coder_payload: u64,
+    pub coder_flush: u64,
+}
+
+/// Decisions and symbols for the adaptation annex. Raw has neither.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BlockTrace {
+    pub traces: Vec<DecisionTrace>,
+    pub symbols: Vec<u8>,
+    pub flush_bytes: u64,
+}
 
 /// Decoder read-ahead, 36 KiB. [`MAX_ENCODED_BLOCK`] plus a 4-byte trailer is
 /// 32902. This constant is that ceiling rounded up to 36 KiB.
@@ -200,6 +261,20 @@ pub fn encode_block(
     remaining: u64,
     bytes: &[u8],
 ) -> Result<Vec<u8>, Error> {
+    Ok(encode_block_model(kind, nominal, remaining, bytes, &ModelConfig::strawman()?)?.bytes)
+}
+
+/// Encode one Block with an explicit model.
+///
+/// [`encode_block`] is this function on [`ModelConfig::strawman`]. A different
+/// model is a measurement path. It is not the `compress` bitstream.
+pub fn encode_block_model(
+    kind: BlockKind,
+    nominal: NominalLength,
+    remaining: u64,
+    bytes: &[u8],
+    model: &ModelConfig,
+) -> Result<EncodedBlock, Error> {
     if !is_canonical(nominal, remaining) {
         return Err(Error::NonCanonicalLength);
     }
@@ -219,33 +294,69 @@ pub fn encode_block(
             formula_wire::append_section(&mut out, nominal.code(), kind)?;
         }
     }
-    match kind {
-        BlockKind::Raw => out.extend_from_slice(bytes),
-        BlockKind::Direct => append_coded(&mut out, bytes.iter().copied().map(direct_symbol))?,
-        BlockKind::PreviousByte => {
-            let mut yhat = 0u8;
-            let mut symbols = Vec::with_capacity(bytes.len());
-            for &y in bytes {
-                symbols.push(residual_symbol(y, yhat));
-                yhat = y;
-            }
-            append_coded(&mut out, symbols.into_iter())?;
-        }
-        BlockKind::Constant(c) => append_coded(
-            &mut out,
-            bytes.iter().copied().map(|y| residual_symbol(y, c)),
-        )?,
-        BlockKind::Polynomial { .. }
-        | BlockKind::Trigonometric { .. }
-        | BlockKind::Recurrence { .. } => {
-            let predictions = formula_wire::predictions(kind, actual)?;
-            append_predicted(&mut out, bytes, &predictions)?;
-        }
-    }
+    let section = u64::try_from(out.len()).map_err(|_| Error::BlockTooLarge)?;
+    let symbols = symbols_of(kind, bytes)?;
+    let (raw_payload, coder_payload, coder_flush) = if kind == BlockKind::Raw {
+        out.extend_from_slice(bytes);
+        (
+            u64::try_from(bytes.len()).map_err(|_| Error::BlockTooLarge)?,
+            0,
+            0,
+        )
+    } else {
+        let (payload, flush) = append_coded(&mut out, model, symbols.into_iter())?;
+        (0, payload, flush)
+    };
     if out.len() > MAX_ENCODED_BLOCK {
         return Err(Error::BlockTooLarge);
     }
-    Ok(out)
+    Ok(EncodedBlock {
+        bytes: out,
+        section,
+        raw_payload,
+        coder_payload,
+        coder_flush,
+    })
+}
+
+/// Re-encode the model decisions of one Block. Raw returns empty traces.
+pub fn trace_block(
+    kind: BlockKind,
+    nominal: NominalLength,
+    remaining: u64,
+    bytes: &[u8],
+    model: &ModelConfig,
+) -> Result<BlockTrace, Error> {
+    if !is_canonical(nominal, remaining) {
+        return Err(Error::NonCanonicalLength);
+    }
+    let actual =
+        usize::try_from(actual_len(nominal, remaining)).map_err(|_| Error::BlockLengthMismatch)?;
+    if bytes.len() != actual {
+        return Err(Error::BlockLengthMismatch);
+    }
+    if kind == BlockKind::Raw {
+        return Ok(BlockTrace {
+            traces: Vec::new(),
+            symbols: Vec::new(),
+            flush_bytes: 0,
+        });
+    }
+    let symbols = symbols_of(kind, bytes)?;
+    let mut model_state = Order0Model::new(model.clone());
+    let mut encoder = RangeEncoder::new();
+    let mut traces = Vec::new();
+    for symbol in &symbols {
+        let eight = model_state.encode_symbol(&mut encoder, *symbol)?;
+        traces.extend_from_slice(&eight);
+    }
+    let (coded, payload) = encoder.finish_split();
+    let flush = coded.len().saturating_sub(payload);
+    Ok(BlockTrace {
+        traces,
+        symbols,
+        flush_bytes: u64::try_from(flush).map_err(|_| Error::BlockTooLarge)?,
+    })
 }
 
 /// Decode one baseline Block from the front of `input`.
@@ -264,6 +375,17 @@ pub fn encode_block(
 /// 8. raw payload short, or a baseline section short → [`Error::TruncatedBlock`]
 /// 9. coder errors pass through
 pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
+    decode_block_model(input, remaining, &ModelConfig::strawman()?)
+}
+
+/// Decode one Block with the same model the side-path encoder used.
+///
+/// [`decode_block`] is this function on [`ModelConfig::strawman`].
+pub fn decode_block_model(
+    input: &[u8],
+    remaining: u64,
+    model: &ModelConfig,
+) -> Result<BlockView, Error> {
     let first = match input.first().copied() {
         Some(byte) => byte,
         None => return Err(Error::TruncatedBlock),
@@ -286,7 +408,7 @@ pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
             usize::try_from(actual_len(nominal, remaining)).map_err(|_| Error::TruncatedBlock)?;
         let payload = input.get(section_len..).ok_or(Error::TruncatedBlock)?;
         let predictions = formula_wire::predictions(kind, actual)?;
-        let (bytes, payload_used) = decode_predicted(payload, &predictions)?;
+        let (bytes, payload_used) = decode_predicted(payload, &predictions, model)?;
         let consumed = section_len
             .checked_add(payload_used)
             .ok_or(Error::TruncatedBlock)?;
@@ -309,9 +431,9 @@ pub fn decode_block(input: &[u8], remaining: u64) -> Result<BlockView, Error> {
             let raw = payload.get(..actual).ok_or(Error::TruncatedBlock)?;
             (raw.to_vec(), actual)
         }
-        BlockKind::Direct => decode_coded(payload, actual, Prediction::Direct)?,
-        BlockKind::PreviousByte => decode_coded(payload, actual, Prediction::Previous)?,
-        BlockKind::Constant(c) => decode_coded(payload, actual, Prediction::Constant(c))?,
+        BlockKind::Direct => decode_coded(payload, actual, Prediction::Direct, model)?,
+        BlockKind::PreviousByte => decode_coded(payload, actual, Prediction::Previous, model)?,
+        BlockKind::Constant(c) => decode_coded(payload, actual, Prediction::Constant(c), model)?,
         BlockKind::Polynomial { .. }
         | BlockKind::Trigonometric { .. }
         | BlockKind::Recurrence { .. } => return Err(Error::InvalidParameter),
@@ -375,6 +497,96 @@ pub fn write_blocked_file(
             .ok_or(Error::BlockLengthMismatch)?;
     }
     write_all(&mut output, &crc.finish().to_le_bytes())
+}
+
+/// File bytes and the account that sums to that length.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AccountedFile {
+    pub bytes: Vec<u8>,
+    pub account: ByteAccount,
+}
+
+/// Whole-file raw plus its account.
+pub fn write_raw_accounted(n: u64, payload: &[u8]) -> Result<AccountedFile, Error> {
+    if u64::try_from(payload.len()).ok() != Some(n) {
+        return Err(Error::BlockLengthMismatch);
+    }
+    let mut bytes = Vec::new();
+    write_whole_file_raw(n, payload, &mut bytes)?;
+    let header = encode_whole_file_raw_header(n)?;
+    let account = ByteAccount::whole_file_raw(u64::from(header.len), n);
+    if account.total() != u64::try_from(bytes.len()).map_err(|_| Error::BlockTooLarge)? {
+        return Err(Error::BlockLengthMismatch);
+    }
+    Ok(AccountedFile { bytes, account })
+}
+
+/// Mode-0 file using `model`, plus an account of those bytes.
+pub fn write_blocked_accounted(
+    n: u64,
+    plans: &[BlockPlan<'_>],
+    model: &ModelConfig,
+) -> Result<AccountedFile, Error> {
+    if n >= LENGTH_LIMIT {
+        return Err(Error::LengthOutOfRange);
+    }
+    if n == 0 {
+        return Err(Error::BlockedEmpty);
+    }
+    let mut remaining = n;
+    let mut encoded = Vec::new();
+    for plan in plans {
+        let block = encode_block_model(plan.kind, plan.nominal, remaining, plan.bytes, model)?;
+        if block.section == 0 {
+            return Err(Error::InvalidParameter);
+        }
+        remaining = remaining
+            .checked_sub(u64::try_from(plan.bytes.len()).map_err(|_| Error::BlockLengthMismatch)?)
+            .ok_or(Error::BlockLengthMismatch)?;
+        encoded.push(block);
+    }
+    if remaining != 0 {
+        return Err(Error::BlockLengthMismatch);
+    }
+    let header = blocked_header(n)?;
+    let mut account = ByteAccount {
+        file_header: u64::try_from(header.len()).map_err(|_| Error::BlockTooLarge)?,
+        crc: 4,
+        ..ByteAccount::default()
+    };
+    let mut bytes = header;
+    for block in &encoded {
+        account.block_headers = account
+            .block_headers
+            .checked_add(1)
+            .ok_or(Error::BlockTooLarge)?;
+        account.parameters = account
+            .parameters
+            .checked_add(block.section - 1)
+            .ok_or(Error::BlockTooLarge)?;
+        account.raw_payload = account
+            .raw_payload
+            .checked_add(block.raw_payload)
+            .ok_or(Error::BlockTooLarge)?;
+        account.coder_payload = account
+            .coder_payload
+            .checked_add(block.coder_payload)
+            .ok_or(Error::BlockTooLarge)?;
+        account.coder_flush = account
+            .coder_flush
+            .checked_add(block.coder_flush)
+            .ok_or(Error::BlockTooLarge)?;
+        bytes.extend_from_slice(&block.bytes);
+    }
+    let mut crc = Crc32::new();
+    for plan in plans {
+        crc.update(plan.bytes);
+    }
+    bytes.extend_from_slice(&crc.finish().to_le_bytes());
+    if account.total() != u64::try_from(bytes.len()).map_err(|_| Error::BlockTooLarge)? {
+        return Err(Error::BlockLengthMismatch);
+    }
+    Ok(AccountedFile { bytes, account })
 }
 
 /// Read a mode-0 file one Block at a time.
@@ -466,24 +678,48 @@ fn push_section(out: &mut Vec<u8>, nominal: NominalLength, kind: BlockKind) -> R
     Ok(())
 }
 
-fn append_predicted(out: &mut Vec<u8>, bytes: &[u8], predictions: &[u8]) -> Result<(), Error> {
-    if predictions.len() != bytes.len() {
-        return Err(Error::BlockLengthMismatch);
-    }
-    let mut symbols = Vec::with_capacity(bytes.len());
-    for (index, yhat) in predictions.iter().copied().enumerate() {
-        let y = bytes
-            .get(index)
+fn symbols_of(kind: BlockKind, bytes: &[u8]) -> Result<Vec<u8>, Error> {
+    match kind {
+        BlockKind::Raw => Ok(Vec::new()),
+        BlockKind::Direct => Ok(bytes.iter().copied().map(direct_symbol).collect()),
+        BlockKind::PreviousByte => {
+            let mut yhat = 0u8;
+            let mut symbols = Vec::with_capacity(bytes.len());
+            for &y in bytes {
+                symbols.push(residual_symbol(y, yhat));
+                yhat = y;
+            }
+            Ok(symbols)
+        }
+        BlockKind::Constant(c) => Ok(bytes
+            .iter()
             .copied()
-            .ok_or(Error::BlockLengthMismatch)?;
-        symbols.push(residual_symbol(y, yhat));
+            .map(|y| residual_symbol(y, c))
+            .collect()),
+        BlockKind::Polynomial { .. }
+        | BlockKind::Trigonometric { .. }
+        | BlockKind::Recurrence { .. } => {
+            let predictions = formula_wire::predictions(kind, bytes.len())?;
+            let mut symbols = Vec::with_capacity(bytes.len());
+            for (index, yhat) in predictions.iter().copied().enumerate() {
+                let y = bytes
+                    .get(index)
+                    .copied()
+                    .ok_or(Error::BlockLengthMismatch)?;
+                symbols.push(residual_symbol(y, yhat));
+            }
+            Ok(symbols)
+        }
     }
-    append_coded(out, symbols.into_iter())
 }
 
-fn decode_predicted(payload: &[u8], predictions: &[u8]) -> Result<(Vec<u8>, usize), Error> {
+fn decode_predicted(
+    payload: &[u8],
+    predictions: &[u8],
+    config: &ModelConfig,
+) -> Result<(Vec<u8>, usize), Error> {
     let mut decoder = RangeDecoder::new(payload)?;
-    let mut model = Order0Model::new(ModelConfig::strawman()?);
+    let mut model = Order0Model::new(config.clone());
     let mut bytes = Vec::with_capacity(predictions.len());
     for yhat in predictions {
         let (symbol, _) = model.decode_symbol(&mut decoder)?;
@@ -493,23 +729,33 @@ fn decode_predicted(payload: &[u8], predictions: &[u8]) -> Result<(Vec<u8>, usiz
     Ok((bytes, decoder.bytes_consumed()))
 }
 
-fn append_coded(out: &mut Vec<u8>, symbols: impl Iterator<Item = u8>) -> Result<(), Error> {
-    let mut model = Order0Model::new(ModelConfig::strawman()?);
+fn append_coded(
+    out: &mut Vec<u8>,
+    config: &ModelConfig,
+    symbols: impl Iterator<Item = u8>,
+) -> Result<(u64, u64), Error> {
+    let mut model = Order0Model::new(config.clone());
     let mut encoder = RangeEncoder::new();
     for symbol in symbols {
         model.encode_symbol(&mut encoder, symbol)?;
     }
-    out.extend_from_slice(&encoder.finish());
-    Ok(())
+    let (coded, payload) = encoder.finish_split();
+    let flush = coded.len().saturating_sub(payload);
+    out.extend_from_slice(&coded);
+    Ok((
+        u64::try_from(payload).map_err(|_| Error::BlockTooLarge)?,
+        u64::try_from(flush).map_err(|_| Error::BlockTooLarge)?,
+    ))
 }
 
 fn decode_coded(
     payload: &[u8],
     actual: usize,
     prediction: Prediction,
+    config: &ModelConfig,
 ) -> Result<(Vec<u8>, usize), Error> {
     let mut decoder = RangeDecoder::new(payload)?;
-    let mut model = Order0Model::new(ModelConfig::strawman()?);
+    let mut model = Order0Model::new(config.clone());
     let mut bytes = Vec::with_capacity(actual);
     let mut yhat = 0u8;
     for _ in 0..actual {

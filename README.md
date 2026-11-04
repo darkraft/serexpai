@@ -1,7 +1,7 @@
 # SerExpAI
 
 **SerExpAI** (repository `serexpai`) is a lossless compressor.
-Version **0.0.18**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. `sxp-cli compress` writes that search, and `sxp-cli decompress` restores the file. `sxp-bench` generates three 4096-byte synthetic signals from those kernel evaluators. `tools/fetch` checks a committed corpus manifest and does not download it. The corpus gate is not ready.
+Version **0.0.19**. `sxp-kernel` reads and writes whole-file raw, reconstructs a byte from any prediction, evaluates polynomial, trigonometric, and recurrence formulas, codes binary decisions with the range coder, adapts an order-0 probability model, and round-trips a baseline or formula Block in blocked mode. `sxp-encoder` selects Raw, Direct, Previous-byte, and Constant blocks by exact encoded size, and searches a labelled fixture codebook of regenerable formulas. `sxp-cli compress` writes that search, and `sxp-cli decompress` restores the file. `sxp-cli benchmark` reports six arms on the three synthetic signals and stays exploratory while the corpus gate is open. `tools/fetch` checks a committed corpus manifest and does not download it. The corpus gate is not ready.
 
 It represents **MBSC** (Multi-Basis Series Compression System): the idea of predicting
 each byte of a block from a compact formula (polynomial, trigonometric or recurrence)
@@ -28,8 +28,13 @@ fixture codebook with header pruning and no thread pool. `sxp-cli decompress
 <src> <dst>` restores the original bytes through the kernel. Success replaces
 the destination by renaming a temp file in the same directory. A failure leaves
 an existing destination unchanged. `--help` and `-h` print usage and exit 0.
-There is no `--version`, `--recipe`, `--threads`, or `--force`. The benchmark
-command is still absent.
+`sxp-cli benchmark <out-dir> <manifest> <gate>` writes `report.json`,
+`annex.json`, `timing.log`, and one `.sxpc` sidecar per encoded input. The
+output directory must already exist. Stdout is the report. The default report
+is `exploratory/unreportable` with a null verdict. It does not download the
+corpus and does not install a tuned model into `compress`.
+
+There is no `--version`, `--recipe`, `--threads`, or `--force`.
 
 Arguments are files. There is no standard-input or standard-output data path.
 
@@ -86,8 +91,8 @@ targets. The encoder selects among the baselines by exact encoded size,
 partitions the input, lets whole-file raw win a tie, and searches the labelled
 fixture codebook the same way. `sxp-cli compress` and `sxp-cli decompress`
 round-trip a file on both targets. The corpus manifest and its gate report
-are committed, and the corpus gate stays not ready. The production recipe and
-the benchmark are still absent.
+are committed, and the corpus gate stays not ready. `sxp-cli benchmark` writes
+an exploratory comparison of the six arms. The production recipe is still absent.
 
 The epic breakdown and the implementation-readiness report (2026-11-01, NEEDS
 WORK) are on the `serexpai-bmad` branch. Reportable evaluation stays gated on

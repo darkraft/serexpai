@@ -87,11 +87,19 @@ impl RangeEncoder {
     }
 
     /// Five `shift_low` calls. The first emitted byte has already been dropped.
-    pub fn finish(mut self) -> Vec<u8> {
+    pub fn finish(self) -> Vec<u8> {
+        self.finish_split().0
+    }
+
+    /// Coder bytes, and how many of them were emitted before `finish`.
+    ///
+    /// The suffix is the flush. Its length is four when no carry expands it.
+    pub(crate) fn finish_split(mut self) -> (Vec<u8>, usize) {
+        let payload = self.out.len();
         for _ in 0..5 {
             self.shift_low();
         }
-        self.out
+        (self.out, payload)
     }
 
     fn shift_low(&mut self) {

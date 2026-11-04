@@ -6,8 +6,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use rayon::ThreadPoolBuilder;
 use rayon::prelude::*;
 use sxp_kernel::{
-    BlockKind, BlockPlan, LENGTH_LIMIT, NominalLength, actual_len, encode_block,
-    encode_whole_file_raw_header, write_blocked_file, write_whole_file_raw,
+    BlockKind, BlockPlan, ByteAccount, LENGTH_LIMIT, ModelConfig, NominalLength, actual_len,
+    encode_block, encode_block_model, encode_whole_file_raw_header, write_blocked_accounted,
+    write_blocked_file, write_raw_accounted, write_whole_file_raw,
 };
 
 use crate::Error;
@@ -735,4 +736,308 @@ fn write_selection(input: &[u8], selection: &Selection) -> Result<Vec<u8>, Error
     }
     write_blocked_file(n, &plans, &mut output).map_err(Error::Kernel)?;
     Ok(output)
+}
+
+/// One searched span and every candidate cell, in id order.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpanRecord {
+    pub offset: u64,
+    pub length_code: u8,
+    pub cells: Vec<(u16, CostCell)>,
+}
+
+/// A blocked search, the file it wrote, and the counters the report stores.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArmSearch {
+    pub selection: Selection,
+    pub file: Vec<u8>,
+    pub account: ByteAccount,
+    pub spans: Vec<SpanRecord>,
+    pub selected_model_decisions: u64,
+    pub selected_coder_steps: u64,
+    pub search_evaluated: u64,
+    pub search_skipped: u64,
+}
+
+/// Search `candidates` and write the winning file.
+///
+/// `model` equal to [`ModelConfig::strawman`] costs Blocks with [`encode_block`].
+/// Any other model is the tuner side path. `N == 0` is whole-file raw and
+/// ignores `candidates`.
+pub fn search_arm(
+    input: &[u8],
+    candidates: &[SearchCandidate],
+    policy: LengthPolicy,
+    mode: SearchMode,
+    threads: usize,
+    model: &ModelConfig,
+) -> Result<ArmSearch, Error> {
+    let n = u64::try_from(input.len())
+        .map_err(|_| Error::Kernel(sxp_kernel::Error::LengthOutOfRange))?;
+    check_length(n)?;
+    if n == 0 {
+        let accounted = write_raw_accounted(n, input).map_err(Error::Kernel)?;
+        return Ok(ArmSearch {
+            selection: Selection {
+                key: PartitionKey {
+                    block_bytes: 0,
+                    block_count: 0,
+                    steps: Vec::new(),
+                },
+                choices: Vec::new(),
+                whole_file_raw: true,
+                file_len: u64::try_from(accounted.bytes.len())
+                    .map_err(|_| Error::Kernel(sxp_kernel::Error::BlockTooLarge))?,
+            },
+            file: accounted.bytes,
+            account: accounted.account,
+            spans: Vec::new(),
+            selected_model_decisions: 0,
+            selected_coder_steps: 0,
+            search_evaluated: 0,
+            search_skipped: 0,
+        });
+    }
+    if candidates.is_empty() {
+        return Err(Error::NoCandidate);
+    }
+    let strawman = ModelConfig::strawman().map_err(Error::Kernel)?;
+    let strawman_path = model == &strawman;
+    let spans_to_cost = spans_from(n, policy)?;
+    let recorded = if threads <= 1 {
+        let mut rows = Vec::with_capacity(spans_to_cost.len());
+        for (offset, nominal) in spans_to_cost {
+            rows.push(record_span(&SpanRequest {
+                input,
+                offset,
+                nominal,
+                n,
+                candidates,
+                mode,
+                model,
+                strawman_path,
+            })?);
+        }
+        rows
+    } else {
+        let pool = ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .map_err(|_| Error::ThreadPool)?;
+        pool.install(|| {
+            spans_to_cost
+                .par_iter()
+                .map(|(offset, nominal)| {
+                    record_span(&SpanRequest {
+                        input,
+                        offset: *offset,
+                        nominal: *nominal,
+                        n,
+                        candidates,
+                        mode,
+                        model,
+                        strawman_path,
+                    })
+                })
+                .collect::<Result<Vec<_>, Error>>()
+        })?
+    };
+    let mut table = SpanTable::new();
+    let mut spans = Vec::with_capacity(recorded.len());
+    for row in recorded {
+        table.insert((row.offset, row.length_code), row.cost);
+        spans.push(SpanRecord {
+            offset: row.offset,
+            length_code: row.length_code,
+            cells: row.cells,
+        });
+    }
+    spans.sort_by_key(|span| (span.offset, span.length_code));
+    let key = reduce(n, policy, &table)?;
+    let choices = choices_from(&key, &table, n)?;
+    let whole_file_raw = key.block_bytes >= n;
+    let file_len = predicted_file_len(n, key.block_bytes, whole_file_raw)?;
+    let selection = Selection {
+        key,
+        choices,
+        whole_file_raw,
+        file_len,
+    };
+    let accounted = if whole_file_raw {
+        write_raw_accounted(n, input).map_err(Error::Kernel)?
+    } else {
+        let mut plans = Vec::new();
+        let mut offset = 0u64;
+        for choice in &selection.choices {
+            let remaining = n
+                .checked_sub(offset)
+                .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
+            let actual = actual_len(choice.nominal, remaining);
+            plans.push((choice.kind, choice.nominal, offset, actual));
+            offset = offset
+                .checked_add(actual)
+                .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
+        }
+        let mut block_plans = Vec::with_capacity(plans.len());
+        for (kind, nominal, start, len) in &plans {
+            block_plans.push(BlockPlan {
+                kind: *kind,
+                nominal: *nominal,
+                bytes: slice_of(input, *start, *len)?,
+            });
+        }
+        write_blocked_accounted(n, &block_plans, model).map_err(Error::Kernel)?
+    };
+    let written = u64::try_from(accounted.bytes.len())
+        .map_err(|_| Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+    if written != file_len || accounted.account.total() != written {
+        return Err(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch));
+    }
+    let (decisions, steps) = if whole_file_raw {
+        (0, 0)
+    } else {
+        selected_work(n, &selection)?
+    };
+    let mut search_evaluated = 0u64;
+    let mut search_skipped = 0u64;
+    for span in &spans {
+        for (_, cell) in &span.cells {
+            match cell {
+                CostCell::Evaluated(_) => {
+                    search_evaluated = search_evaluated
+                        .checked_add(1)
+                        .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+                }
+                CostCell::Skipped => {
+                    search_skipped = search_skipped
+                        .checked_add(1)
+                        .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+                }
+            }
+        }
+    }
+    Ok(ArmSearch {
+        selection,
+        file: accounted.bytes,
+        account: accounted.account,
+        spans,
+        selected_model_decisions: decisions,
+        selected_coder_steps: steps,
+        search_evaluated,
+        search_skipped,
+    })
+}
+
+struct SpanRequest<'a> {
+    input: &'a [u8],
+    offset: u64,
+    nominal: NominalLength,
+    n: u64,
+    candidates: &'a [SearchCandidate],
+    mode: SearchMode,
+    model: &'a ModelConfig,
+    strawman_path: bool,
+}
+
+struct RecordedSpan {
+    offset: u64,
+    length_code: u8,
+    cost: SpanCost,
+    cells: Vec<(u16, CostCell)>,
+}
+
+fn record_span(request: &SpanRequest<'_>) -> Result<RecordedSpan, Error> {
+    let remaining = request
+        .n
+        .checked_sub(request.offset)
+        .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
+    let actual = actual_len(request.nominal, remaining);
+    let bytes = slice_of(request.input, request.offset, actual)?;
+    let cells = if request.strawman_path {
+        span_cells(
+            bytes,
+            request.nominal,
+            remaining,
+            request.candidates,
+            request.mode,
+        )?
+    } else {
+        walk_candidates(request.candidates, request.mode, |candidate| {
+            encode_block_model(
+                candidate.kind,
+                request.nominal,
+                remaining,
+                bytes,
+                request.model,
+            )
+            .and_then(|encoded| {
+                u64::try_from(encoded.bytes.len()).map_err(|_| sxp_kernel::Error::BlockTooLarge)
+            })
+        })?
+        .cells
+    };
+    let cost = cost_from_cells(request.candidates, &cells)?;
+    Ok(RecordedSpan {
+        offset: request.offset,
+        length_code: request.nominal.code(),
+        cost,
+        cells,
+    })
+}
+
+fn cost_from_cells(
+    candidates: &[SearchCandidate],
+    cells: &[(u16, CostCell)],
+) -> Result<SpanCost, Error> {
+    let mut best: Option<(u16, u64)> = None;
+    for (id, cell) in cells {
+        let CostCell::Evaluated(bytes) = cell else {
+            continue;
+        };
+        let replace = match best {
+            None => true,
+            Some((best_id, best_bytes)) => (*bytes, *id) < (best_bytes, best_id),
+        };
+        if replace {
+            best = Some((*id, *bytes));
+        }
+    }
+    let (id, bytes) = best.ok_or(Error::NoCandidate)?;
+    let kind = candidates
+        .iter()
+        .find(|candidate| candidate.id == id)
+        .map(|candidate| candidate.kind)
+        .ok_or(Error::NoCandidate)?;
+    Ok(SpanCost { id, bytes, kind })
+}
+
+fn selected_work(n: u64, selection: &Selection) -> Result<(u64, u64), Error> {
+    let mut offset = 0u64;
+    let mut input_bytes = 0u64;
+    let mut coded_blocks = 0u64;
+    for choice in &selection.choices {
+        let remaining = n
+            .checked_sub(offset)
+            .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
+        let actual = actual_len(choice.nominal, remaining);
+        if choice.kind != BlockKind::Raw {
+            input_bytes = input_bytes
+                .checked_add(actual)
+                .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+            coded_blocks = coded_blocks
+                .checked_add(1)
+                .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+        }
+        offset = offset
+            .checked_add(actual)
+            .ok_or(Error::Kernel(sxp_kernel::Error::BlockLengthMismatch))?;
+    }
+    let decisions = input_bytes
+        .checked_mul(8)
+        .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+    let steps = coded_blocks
+        .checked_mul(5)
+        .and_then(|flush| flush.checked_add(decisions))
+        .ok_or(Error::Kernel(sxp_kernel::Error::BlockTooLarge))?;
+    Ok((decisions, steps))
 }

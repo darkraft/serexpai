@@ -18,6 +18,7 @@ use std::ffi::OsString;
 use std::io::{self, Write};
 
 mod args;
+mod benchmark;
 mod compress;
 mod decompress;
 mod error;
@@ -58,21 +59,36 @@ where
             stderr: String::new(),
         },
         args::ParseResult::Usage(err, command) => fail(command.map(CommandName::as_str), &err),
-        args::ParseResult::Run(parsed) => {
-            let command = parsed.command.as_str();
-            let result = match parsed.command {
-                CommandName::Compress => compress::compress(fs, &parsed.src, &parsed.dst),
-                CommandName::Decompress => decompress::decompress(fs, &parsed.src, &parsed.dst),
-            };
-            match result {
-                Ok(()) => Output {
+        args::ParseResult::Run(parsed) => match parsed {
+            args::Parsed::Compress { src, dst } => match compress::compress(fs, &src, &dst) {
+                Ok(()) => quiet(),
+                Err(err) => fail(Some("compress"), &err),
+            },
+            args::Parsed::Decompress { src, dst } => match decompress::decompress(fs, &src, &dst) {
+                Ok(()) => quiet(),
+                Err(err) => fail(Some("decompress"), &err),
+            },
+            args::Parsed::Benchmark {
+                out,
+                manifest,
+                gate,
+            } => match benchmark::benchmark(fs, &out, &manifest, &gate) {
+                Ok(report) => Output {
                     code: 0,
-                    stdout: String::new(),
+                    stdout: report,
                     stderr: String::new(),
                 },
-                Err(err) => fail(Some(command), &err),
-            }
-        }
+                Err(err) => fail(Some("benchmark"), &err),
+            },
+        },
+    }
+}
+
+fn quiet() -> Output {
+    Output {
+        code: 0,
+        stdout: String::new(),
+        stderr: String::new(),
     }
 }
 

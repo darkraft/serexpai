@@ -29,8 +29,10 @@ mod residual;
 mod trigonometric;
 
 pub use block::{
-    BLOCK_WINDOW, BlockKind, BlockPlan, BlockView, MAX_ENCODED_BLOCK, NominalLength, actual_len,
-    decode_block, encode_block, is_canonical, read_blocked_file, write_blocked_file,
+    AccountedFile, BLOCK_WINDOW, BlockKind, BlockPlan, BlockTrace, BlockView, ByteAccount,
+    EncodedBlock, MAX_ENCODED_BLOCK, NominalLength, actual_len, decode_block, decode_block_model,
+    encode_block, encode_block_model, is_canonical, read_blocked_file, trace_block,
+    write_blocked_accounted, write_blocked_file, write_raw_accounted,
 };
 pub use crc32::{Crc32, crc32_iso_hdlc};
 pub use error::Error;

@@ -260,3 +260,27 @@ ISO 8601 calendar week 45 of 2026.
 **Choice:** Long: feat: fetch the corpus manifest (v0.0.18) plus body covering the unready corpus gate, synthetic signals, and unchanged format version
 
 **Notes:** Long is the release-manager default.
+
+## 2026-11-04 03:58 — release-manager — v0.0.19 release cut
+
+**Q:** Which version bump should v0.0.19 use?
+
+**Options:**
+- Patch 0.0.18 to 0.0.19 (default)
+- Minor 0.0.18 to 0.1.0
+
+**Choice:** Patch 0.0.18 to 0.0.19 (default)
+
+**Notes:** User invoked release-manager and ordered a push. Format version stays 1. Workspace Cargo.toml, Cargo.lock, README, and CHANGELOG carry 0.0.19. The CLI has no --version.
+
+## 2026-11-04 03:58 — release-manager — Commit message for v0.0.19
+
+**Q:** Which commit message should the v0.0.19 release use?
+
+**Options:**
+- Short: feat: report whether formulas beat baselines (v0.0.19)
+- Long: feat: report whether formulas beat baselines (v0.0.19) plus body covering the exploratory report, six arms, and unchanged format version
+
+**Choice:** Long: feat: report whether formulas beat baselines (v0.0.19) plus body covering the exploratory report, six arms, and unchanged format version
+
+**Notes:** Long is the release-manager default. The published verdict stays null while the corpus gate, D-07, D-09, and overlap are open.

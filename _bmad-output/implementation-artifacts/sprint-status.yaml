@@ -1,5 +1,5 @@
 # generated: 2026-11-01T13:06:27+02:00
-# last_updated: 2026-11-03T18:40:00+02:00
+# last_updated: 2026-11-03T23:20:00+02:00
 # project: serexpai
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-11-01T13:06:27+02:00
-last_updated: 2026-11-03T18:40:00+02:00
+last_updated: 2026-11-04T01:50:38+02:00
 project: serexpai
 project_key: NOKEY
 tracking_system: file-system
@@ -61,7 +61,7 @@ development_status:
   1-10-search-a-regenerable-formula-codebook: done
   1-11-compress-and-decompress-a-file: done
   1-12-fetch-the-corpus-manifest: done
-  1-13-report-whether-formulas-beat-baselines: backlog
+  1-13-report-whether-formulas-beat-baselines: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-write-the-bitstream-specification: backlog

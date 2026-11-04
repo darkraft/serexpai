@@ -20,7 +20,8 @@ pub use codebook::{
 };
 pub use error::Error;
 pub use select::{
-    Choice, CostCell, LengthPolicy, PartitionKey, SearchCandidate, SearchMode, Selection, SpanCost,
-    SpanTable, all_baselines, allowed_nominals, candidate_id, check_length, choose_candidate,
-    encode_baselines, encode_codebook, reduce, select_baselines, select_codebook, span_cells,
+    ArmSearch, Choice, CostCell, LengthPolicy, PartitionKey, SearchCandidate, SearchMode,
+    Selection, SpanCost, SpanRecord, SpanTable, all_baselines, allowed_nominals, candidate_id,
+    check_length, choose_candidate, encode_baselines, encode_codebook, reduce, search_arm,
+    select_baselines, select_codebook, span_cells,
 };

@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: `0
 
 ## [Unreleased]
 
+## [0.0.19] - 2026-11-04
+
+### Added
+
+- `sxp-cli benchmark <out-dir> <manifest> <gate>`. It runs six arms on each supplied input: whole-file raw, forced Constant, forced Previous-byte, forced Direct, baselines-only, and full MBSC with the `fixture-v1` codebook. Each arm is a real bitstream. `read_file` must restore the source. A mismatch is `RoundTripMismatch` and installs no `report.json`.
+- The size check `S_full ≤ S_baselines ≤ min(forced) ≤ S_raw`. A break is `SelectorDefect`, not a verdict, and installs no report.
+- `report.json` and stdout are the same JSON. Gain is baselines-only minus full on counted evaluation inputs. Class sums, sidecars, and work counts are integers. Wall time, host, and timestamps are only in `timing.log`.
+- `annex.json` records adaptation overhead in microbits. Ideal length is the sum of `−log2(freq/4096)` over each selected block. Entropy is that block's zero-order symbol histogram. Overhead is the signed difference after one rounding. The annex is outside the byte-identity check.
+- `SXPC` sidecars for inputs up to 4 MiB. `0xFFFF` is a header-pruned cell. A cost above 65534 is `CostOverflow`. `dense` forces reference search.
+- `classify` is the verdict table and is not published while the run is exploratory. `tune` scores the model grid on tuning rows only and writes `tuning.json` through `tuning_json`. The winner is not installed into `encode_block` or `compress`. `reduce_budget` drops tuning rows before lowering the codebook cap.
+- The default run generates the three synthetic signals, does not fetch, and stays `exploratory/unreportable` with a null verdict while the corpus gate, D-07, D-09, or overlap is open.
+- `docs/decision_logs/`: this release's version and commit-message choices (2026 W45).
+
+### Changed
+
+- **Bitstream format unchanged.** Format version stays 1. `compress` still encodes `fixture-v1` with the strawman model, header pruning, and no thread pool. Kind 7 and length code 3 stay reserved. The production codebook recipe (D-09) and the model constants (D-07) stay open. `corpus_gate_ready` stays false.
+- Byte accounts and `encode_block_model` are a measurement path. `encode_block` and `decode_block` stay on the strawman. A non-strawman stream is not a `compress` output.
+- `README.md` records version 0.0.19 and the benchmark command. The workspace manifest is 0.0.19. The binary has no `--version` flag.
+
 ## [0.0.18] - 2026-11-03
 
 ### Added
